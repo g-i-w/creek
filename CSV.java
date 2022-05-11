@@ -229,7 +229,7 @@ public class CSV {
 	}
 	
 	public String lastLine () {
-		return String.join( comma, lastRow() ) + "\n";
+		return line( data.size()-1 );
 	}
 	
 	public String toString () {
