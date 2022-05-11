@@ -77,8 +77,8 @@ public class CSV {
 	}
 	
 	public CSV append ( List<String> line ) {
-		data.add( line );
 		lastRow = line;
+		addRow();
 		return this;
 	}
 	
