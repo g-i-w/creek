@@ -220,7 +220,7 @@ public class CSV {
 		return csv + "\n";
 	}
 	
-	public String line () {
+	public String lines () {
 		String csvText = "";
 		for (int i=0; i<data.size(); i++) {
 			csvText += line(i);
@@ -233,7 +233,7 @@ public class CSV {
 	}
 	
 	public String toString () {
-		return line();
+		return lines();
 	}
 	
 	public Map<String,Integer> index ( int indexRow ) {
