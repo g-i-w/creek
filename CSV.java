@@ -8,9 +8,12 @@ public class CSV {
 	private List<List<String>> data;
 	private String comma;
 	private String escape;
+	private String quote;
 	
 	private List<String> lastRow;
 	private String lastItem;
+	
+	private Map<Integer,Map<String,Integer>> autoIndex;
 	
 	// states
 	private static final int LINE_START_STATE = 0;
@@ -18,10 +21,16 @@ public class CSV {
 	private static final int COMMA_STATE = 2;
 	private static final int ESCAPE_STATE = 3;
 	private static final int LINE_END_STATE = 4;
+	private static final int QUOTE_DATA_STATE = 5;
+	private static final int QUOTE_END_STATE = 6;
+	private static final int QUOTE_ESCAPE_STATE = 7;
 
 	// state variable
 	private int state = LINE_START_STATE;
 	
+	public int size () {
+		return data.size();
+	}
 	
 	public boolean comma (String c) {
 		return c.equals(comma);
@@ -29,6 +38,10 @@ public class CSV {
 	
 	public boolean escape (String c) {
 		return c.equals(escape);
+	}
+	
+	public boolean quote (String c) {
+		return c.equals(quote);
 	}
 	
 	public boolean newline (String c) {
@@ -81,12 +94,13 @@ public class CSV {
 					newRow();
 					addBlank();
 					state = COMMA_STATE;
+				} else if (quote(thisChar)) {
+					state = QUOTE_DATA_STATE;
 				} else if (newline(thisChar)) {
 					newRow();
 					addRow();
 					state = LINE_END_STATE;
 				} else if (escape(thisChar)) {
-					// Only output the row and data start tags
 					newRow();
 					state = ESCAPE_STATE;
 				} else {
@@ -104,7 +118,6 @@ public class CSV {
 					addRow();
 					state = LINE_END_STATE;
 				} else if (escape(thisChar)) {
-					// Output nothing and go to the ESCAPE_STATE
 					state = ESCAPE_STATE;
 				} else {
 					addChar( thisChar );
@@ -115,12 +128,14 @@ public class CSV {
 				if (comma(thisChar)) {
 					addBlank();
 					state = COMMA_STATE;
+				} else if (quote(thisChar)) {
+					state = QUOTE_DATA_STATE;
 				} else if (newline(thisChar)) {
 					addBlank();
 					addRow();
 					state = LINE_END_STATE;
 				} else if (escape(thisChar)) {
-					// Only output the data start tag
+					// Output nothing and go to ESCAPE_STATE
 					state = ESCAPE_STATE;
 				} else {
 					addChar( thisChar );
@@ -135,7 +150,7 @@ public class CSV {
 				} else if (newline(thisChar)) {
 					// Output nothing and stay in this state
 				} else if (escape(thisChar)) {
-					// Only output the row and data start tags
+					// Output nothing and go to ESCAPE_STATE
 					newRow();
 					state = ESCAPE_STATE;
 				} else {
@@ -144,9 +159,33 @@ public class CSV {
 					state = DATA_STATE;
 				}
 
+			} else if (state == QUOTE_DATA_STATE) {
+				if (quote(thisChar)) {
+					state = QUOTE_END_STATE;
+					addItem();
+				} else if (escape(thisChar)) {
+					addChar( thisChar );
+					state = QUOTE_ESCAPE_STATE;
+				} else {
+					addChar( thisChar );
+					state = QUOTE_DATA_STATE;
+				}
+
+			} else if (state == QUOTE_END_STATE) {
+				if (comma(thisChar)) {
+					state = COMMA_STATE;
+				} else {
+					// Output nothing and continue in the QUOTE_END_STATE
+					state = QUOTE_END_STATE;
+				}
+
 			} else if (state == ESCAPE_STATE) {
 				addChar( thisChar );
 				state = DATA_STATE;
+
+			} else if (state == QUOTE_ESCAPE_STATE) {
+				addChar( thisChar );
+				state = QUOTE_DATA_STATE;
 
 			}
 			
@@ -167,8 +206,18 @@ public class CSV {
 		return lastRow;
 	}
 	
-	public String line ( int i ) {
-		return String.join( comma, row(i) ) + "\n";
+	public String line ( int r ) {
+		String csv = "";
+		for (int i=0; i<row(r).size(); i++) {
+			if (i>0) csv += comma;
+			String item = row(r).get(i);
+			if (item.indexOf(comma) < 0) {
+				csv += item;
+			} else {
+				csv += quote + item + quote;
+			}
+		}
+		return csv + "\n";
 	}
 	
 	public String line () {
@@ -186,22 +235,46 @@ public class CSV {
 	public String toString () {
 		return line();
 	}
+	
+	public Map<String,Integer> index ( int indexRow ) {
+		if (indexRow >= data.size()) return null;
+		if (! autoIndex.containsKey(indexRow)) {
+			Map<String,Integer> map = new LinkedHashMap<>();
+			int i=0;
+			for (String item : data.get(indexRow)) {
+				map.put( item, i++ );
+			}
+			autoIndex.put( indexRow, map );
+			return map;
+		} else {
+			return autoIndex.get(indexRow);
+		}
+	}
+	
+	public String index ( int indexRow, String key, int targetRow ) {
+		if (indexRow >= data.size() || targetRow >= data.size()) return "";
+		Integer col = index( indexRow ).get( key );
+		if (col==null) return "";
+		return data.get(targetRow).get(col);
+	}
 
 
 	
 	public CSV () {
-		this( "", ",", "\\" );
+		this( "", ",", "\\", "\"" );
 	}
 	
 	public CSV ( String csv ) {
-		this( csv, ",", "\\" );
+		this( csv, ",", "\\", "\"" );
 	}
 
-	public CSV ( String csv, String comma, String escape ) {
+	public CSV ( String csv, String comma, String escape, String quote ) {
 		this.comma = comma;
 		this.escape = escape;
+		this.quote = quote;
 		data = new ArrayList<List<String>>();
 		append( csv );
+		autoIndex = new HashMap<>();
 	}
 	
 	
@@ -209,22 +282,27 @@ public class CSV {
 		String csv =
 			"1,22,333,4444,55555\n"+
 			"a, b, c ,d   ,e    \r\n"+
-			"A,B,C\n"+
+			"A,B,C,found it!\n"+
 			"\n"+
-			"1,2,3,\\,4\\,,5\n"+
-			",,A,,\n"+
+			"1,\",2,\",3,\\,4\\,,5\n"+
+			",,Lone Item,,\n"+
+			",,\"quoted item, ,,,very good!\",,\n"+
+			",,\"quoted item, \\\"very good!\\\"\",,\n"+
 			",\r\n";
 		System.out.println( "\ncsv:\n"+csv );
 			
 		CSV csvObj = new CSV( csv );
 		csvObj
-			.append( "a,b" )
-			.append( ",c,d" )
+			.append( "a,b,c" )
+			.append( ",d,e,f" )
+			.append( ",g,h,i" )
 			.append( "\n" )
 		;
 		
 		System.out.println( "\ndata:\n"+csvObj.rows() );
 		System.out.println( "\ncsvObj:\n"+csvObj );
+		System.out.println( "index output: '"+csvObj.index( 0, "4444", 2 )+"'" );
+		System.out.println( "index output: '"+csvObj.index( 0, "333", 6 )+"'" );
 			
 	}
 

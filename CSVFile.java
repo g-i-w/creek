@@ -16,11 +16,11 @@ public class CSVFile extends CSV {
 	}
 	
 	public CSVFile ( File file ) throws Exception {
-		this( file, ",", "\\" );
+		this( file, ",", "\\", "\"" );
 	}
 
-	public CSVFile ( File file, String comma, String escape ) throws Exception {
-		super( "", comma, escape );
+	public CSVFile ( File file, String comma, String escape, String quote ) throws Exception {
+		super( "", comma, escape, quote );
 		initialized = false;
 		this.file = file;
 		writeLock = new AtomicBoolean(false);
