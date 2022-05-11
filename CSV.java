@@ -9,7 +9,7 @@ public class CSV {
 	private String comma;
 	private String escape;
 	
-	private List<String> lastLine;
+	private List<String> lastRow;
 	private String lastItem;
 	
 	// states
@@ -23,37 +23,37 @@ public class CSV {
 	private int state = LINE_START_STATE;
 	
 	
-	private boolean comma (String c) {
+	public boolean comma (String c) {
 		return c.equals(comma);
 	}
 	
-	private boolean escape (String c) {
+	public boolean escape (String c) {
 		return c.equals(escape);
 	}
 	
-	private boolean newline (String c) {
+	public boolean newline (String c) {
 		return c.equals("\n") || c.equals("\r");
 	}
 	
-	private void newRow () {
-		lastLine = new ArrayList<String>();
+	public void newRow () {
+		lastRow = new ArrayList<String>();
 	}
 	
-	private void addRow () {
-		data.add( lastLine );
+	public void addRow () {
+		data.add( lastRow );
 	}
 	
-	private void addChar (String c) {
+	public void addChar (String c) {
 		if (lastItem==null) lastItem = new String();
 		lastItem += c;
 	}
 	
-	private void addItem () {
-		lastLine.add( lastItem );
+	public void addItem () {
+		lastRow.add( lastItem );
 		lastItem = null;
 	}
 	
-	private void addBlank () {
+	public void addBlank () {
 		lastItem = "";
 		addItem();
 	}
@@ -65,7 +65,7 @@ public class CSV {
 	
 	public CSV append ( List<String> line ) {
 		data.add( line );
-		lastLine = line;
+		lastRow = line;
 		return this;
 	}
 	
@@ -164,23 +164,27 @@ public class CSV {
 	}
 	
 	public List<String> lastRow () {
-		return lastLine;
+		return lastRow;
 	}
 	
-	public String csv ( int i ) {
+	public String line ( int i ) {
 		return String.join( comma, row(i) ) + "\n";
 	}
 	
-	public String csv () {
+	public String line () {
 		String csvText = "";
 		for (int i=0; i<data.size(); i++) {
-			csvText += csv(i);
+			csvText += line(i);
 		}
 		return csvText;
 	}
 	
+	public String lastLine () {
+		return String.join( comma, lastRow() ) + "\n";
+	}
+	
 	public String toString () {
-		return csv();
+		return line();
 	}
 
 
