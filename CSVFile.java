@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.*;
 public class CSVFile extends CSVLookup {
 
 	private boolean initialized = false;
+	private Exception appendException;
 	private File file;
 	private AtomicBoolean writeLock;
 	
@@ -55,8 +56,12 @@ public class CSVFile extends CSVLookup {
 		}
 	}
 	
-	public void appendException ( Exception e ) {
-		e.printStackTrace();
+	protected void appendException ( Exception e ) {
+		appendException = e;
+	}
+	
+	public Exception appendException () {
+		return appendException;
 	}
 	
 	public static void main ( String[] args ) {

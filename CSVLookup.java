@@ -64,7 +64,7 @@ public class CSVLookup extends CSV {
 	}
 	
 	public String rowLookup ( int keyRow, int valRow, String key ) {
-		if (keyRow >= length() || valRow >= length()) return "";
+		if (keyRow >= length() || valRow >= length() || keyRow < 0 || valRow < 0) return "";
 		Integer col = rowLookup( keyRow ).get( key );
 		try {
 			return data().get(valRow).get(col);
@@ -74,7 +74,7 @@ public class CSVLookup extends CSV {
 	}
 	
 	public String colLookup ( int keyCol, int valCol, String key ) {
-		if (keyCol >= width() || valCol >= width()) return "";
+		if (keyCol >= length() || valCol >= length() || keyCol < 0 || valCol < 0) return "";
 		Integer row = colLookup( keyCol ).get( key );
 		try {
 			return data().get(row).get(valCol);
@@ -85,7 +85,7 @@ public class CSVLookup extends CSV {
 	
 	public Map<String,String> rowLookup ( int keyRow, int valRow ) {
 		Map<String,String> map = new LinkedHashMap<>();
-		if (keyRow >= length() || valRow >= length()) return map;
+		if (keyRow >= length() || valRow >= length() || keyRow < 0 || valRow < 0) return map;
 		for ( String key : data().get(keyRow) ) {
 			map.put( key, rowLookup(keyRow, valRow, key) );
 		}
@@ -94,7 +94,7 @@ public class CSVLookup extends CSV {
 	
 	public Map<String,String> colLookup ( int keyCol, int valCol ) {
 		Map<String,String> map = new LinkedHashMap<>();
-		if (keyCol >= length() || valCol >= length()) return map;
+		if (keyCol >= length() || valCol >= length() || keyCol < 0 || valCol < 0) return map;
 		for ( String key : colLookup(keyCol).keySet() ) {
 			map.put( key, colLookup(keyCol, valCol, key) );
 		}
