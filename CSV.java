@@ -116,6 +116,11 @@ public class CSV {
 		return this;
 	}
 	
+	public CSV append ( Collection<String> line ) {
+		append( new ArrayList<String>(line) );
+		return this;
+	}
+	
 	public CSV append ( String csv ) {
 	
 		for (int i=0; i<csv.length(); i++) {
