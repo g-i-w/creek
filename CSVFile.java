@@ -5,7 +5,7 @@ import java.nio.file.*;
 import java.nio.charset.*;
 import java.util.concurrent.atomic.*;
 
-public class CSVFile extends CSV {
+public class CSVFile extends CSVLookup {
 
 	private boolean initialized = false;
 	private File file;

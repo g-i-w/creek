@@ -13,7 +13,7 @@ public class CSV {
 	private List<String> lastRow;
 	private String lastItem;
 	
-	private Map<Integer,Map<String,Integer>> autoIndex;
+	private int width = 0;
 	
 	// states
 	private static final int LINE_START_STATE = 0;
@@ -28,8 +28,36 @@ public class CSV {
 	// state variable
 	private int state = LINE_START_STATE;
 	
-	public int size () {
+	
+	// constructors
+	public CSV () {
+		this( "", ",", "\\", "\"" );
+	}
+	
+	public CSV ( String csv ) {
+		this( csv, ",", "\\", "\"" );
+	}
+
+	public CSV ( String csv, String comma, String escape, String quote ) {
+		this.comma = comma;
+		this.escape = escape;
+		this.quote = quote;
+		data = new ArrayList<List<String>>();
+		append( csv );
+	}
+	
+	
+	// general methods
+	public int length () {
 		return data.size();
+	}
+	
+	public int width () {
+		return width;
+	}
+	
+	public List<List<String>> data () {
+		return data;
 	}
 	
 	public boolean comma (String c) {
@@ -54,6 +82,7 @@ public class CSV {
 	
 	public void addRow () {
 		data.add( lastRow );
+		if (lastRow.size() > width) width = lastRow.size();
 	}
 	
 	public void addChar (String c) {
@@ -235,48 +264,8 @@ public class CSV {
 	public String toString () {
 		return lines();
 	}
-	
-	public Map<String,Integer> index ( int indexRow ) {
-		if (indexRow >= data.size()) return null;
-		if (! autoIndex.containsKey(indexRow)) {
-			Map<String,Integer> map = new LinkedHashMap<>();
-			int i=0;
-			for (String item : data.get(indexRow)) {
-				map.put( item, i++ );
-			}
-			autoIndex.put( indexRow, map );
-			return map;
-		} else {
-			return autoIndex.get(indexRow);
-		}
-	}
-	
-	public String index ( int indexRow, String key, int targetRow ) {
-		if (indexRow >= data.size() || targetRow >= data.size()) return "";
-		Integer col = index( indexRow ).get( key );
-		if (col==null) return "";
-		return data.get(targetRow).get(col);
-	}
+		
 
-
-	
-	public CSV () {
-		this( "", ",", "\\", "\"" );
-	}
-	
-	public CSV ( String csv ) {
-		this( csv, ",", "\\", "\"" );
-	}
-
-	public CSV ( String csv, String comma, String escape, String quote ) {
-		this.comma = comma;
-		this.escape = escape;
-		this.quote = quote;
-		data = new ArrayList<List<String>>();
-		append( csv );
-		autoIndex = new HashMap<>();
-	}
-	
 	
 	public static void main ( String[] args ) {
 		String csv =
@@ -301,8 +290,6 @@ public class CSV {
 		
 		System.out.println( "\ndata:\n"+csvObj.rows() );
 		System.out.println( "\ncsvObj:\n"+csvObj );
-		System.out.println( "index output: '"+csvObj.index( 0, "4444", 2 )+"'" );
-		System.out.println( "index output: '"+csvObj.index( 0, "333", 6 )+"'" );
 			
 	}
 
