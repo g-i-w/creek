@@ -44,8 +44,8 @@ public class CSVFile extends CSVLookup {
 					if ( writeLock.compareAndSet( false, true ) ) break;
 					Thread.sleep(1);
 				}
-				Files.write(file.toPath(), lastLine().getBytes(), StandardOpenOption.APPEND);
 				super.addRow();
+				Files.write(file.toPath(), lastLine().getBytes(), StandardOpenOption.APPEND);
 			} catch (Exception e) {
 				appendException(e);
 			} finally {
@@ -58,6 +58,7 @@ public class CSVFile extends CSVLookup {
 	
 	protected void appendException ( Exception e ) {
 		appendException = e;
+		e.printStackTrace();
 	}
 	
 	public Exception appendException () {
@@ -71,6 +72,11 @@ public class CSVFile extends CSVLookup {
 				"a,b,c\n"+
 				"d,e,f\n"
 			);
+			f.append( "1," );
+			f.append( "234" );
+			f.append( ",5,6" );
+			System.out.println( "f: "+f );
+			f.append( "\n" );
 			System.out.println( "f: "+f );
 			
 			Thread.sleep(1000);

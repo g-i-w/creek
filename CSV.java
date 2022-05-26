@@ -268,6 +268,7 @@ public class CSV {
 	}
 	
 	public String lastLine () {
+		if (data.size() == 0) return "";
 		return line( data.size()-1 );
 	}
 	
