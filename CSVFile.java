@@ -44,8 +44,8 @@ public class CSVFile extends CSVLookup {
 					if ( writeLock.compareAndSet( false, true ) ) break;
 					Thread.sleep(1);
 				}
+				Files.write(file.toPath(), line(lastRow()).getBytes(), StandardOpenOption.APPEND);
 				super.addRow();
-				Files.write(file.toPath(), lastLine().getBytes(), StandardOpenOption.APPEND);
 			} catch (Exception e) {
 				appendException(e);
 			} finally {

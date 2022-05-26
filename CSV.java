@@ -246,10 +246,14 @@ public class CSV {
 	}
 	
 	public String line ( int r ) {
+		return line( row(r) );
+	}
+	
+	public String line ( List<String> list ) {
 		String csv = "";
-		for (int i=0; i<row(r).size(); i++) {
+		for (int i=0; i<list.size(); i++) {
 			if (i>0) csv += comma;
-			String item = row(r).get(i);
+			String item = list.get(i);
 			if (item.indexOf(comma) < 0) {
 				csv += item;
 			} else {
