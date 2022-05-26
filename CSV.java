@@ -213,6 +213,9 @@ public class CSV {
 			} else if (state == QUOTE_END_STATE) {
 				if (comma(thisChar)) {
 					state = COMMA_STATE;
+				} else if (newline(thisChar)) {
+					addRow();
+					state = LINE_END_STATE;
 				} else {
 					// Output nothing and continue in the QUOTE_END_STATE
 					state = QUOTE_END_STATE;
@@ -285,7 +288,7 @@ public class CSV {
 	public static void main ( String[] args ) {
 		String csv =
 			"1,22,333,4444,55555\n"+
-			"a, b, c ,d   ,e    \r\n"+
+			"a, b, c ,d   ,\"e\"    \r\n"+
 			"A,B,C,found it!\n"+
 			"\n"+
 			"1,\",2,\",3,\\,4\\,,5\n"+
