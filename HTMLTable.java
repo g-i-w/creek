@@ -20,11 +20,11 @@ public class HTMLTable extends CSVFile {
 	public String toString () {
 		String html = "<table>\n";
 		for (List<String> row : data()) {
-			html += "\t<tr>\n";
+			String rowStr = "";
 			for (String item : row) {
-				html += "\t\t<td>"+item+"</td>\n";
+				rowStr += "\t\t<td>"+item+"</td>\n";
 			}
-			html += "\t</tr>\n";
+			html += "\t<tr>\n"+rowStr+"\t</tr>\n";
 		}
 		html += "</table>\n";
 		return html;
