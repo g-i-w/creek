@@ -18,16 +18,17 @@ public class HTMLTable extends CSVFile {
 	}
 	
 	public String toString () {
-		String html = "<table>\n";
+		StringBuilder html = new StringBuilder();
+		html.append( "<table>\n" );
 		for (List<String> row : data()) {
-			String rowStr = "";
+			html.append( "\t<tr>\n" );
 			for (String item : row) {
-				rowStr += "\t\t<td>"+item+"</td>\n";
+				html.append( "\t\t<td>"+item+"</td>\n" );
 			}
-			html += "\t<tr>\n"+rowStr+"\t</tr>\n";
+			html.append( "\t</tr>\n" );
 		}
-		html += "</table>\n";
-		return html;
+		html.append( "</table>\n" );
+		return html.toString();
 	}
 	
 	public static void main ( String[] args ) {
