@@ -29,25 +29,43 @@ public class CSV {
 	private int state = LINE_START_STATE;
 	
 	
-	// constructors
+
 	public CSV () {
-		this( "", ",", "\\", "\"" );
+		this( ",", "\\", "\"" );
 	}
 	
 	public CSV ( String csv ) {
 		this( csv, ",", "\\", "\"" );
 	}
 
+	public CSV ( String comma, String escape, String quote ) {
+		this.comma = comma;
+		this.escape = escape;
+		this.quote = quote;
+		this.data = new ArrayList<List<String>>();
+	}
+	
 	public CSV ( String csv, String comma, String escape, String quote ) {
 		this.comma = comma;
 		this.escape = escape;
 		this.quote = quote;
-		data = new ArrayList<List<String>>();
+		this.data = new ArrayList<List<String>>();
 		append( csv );
 	}
 	
+	public CSV ( List<List<String>> data, String comma, String escape, String quote ) {
+		this.comma = comma;
+		this.escape = escape;
+		this.quote = quote;
+		this.data = data;
+		for (List<String> row : data) {
+			lastRow = row;
+			addRow();
+		}
+	}
 	
-	// general methods
+
+	
 	public int length () {
 		return data.size();
 	}
@@ -64,16 +82,32 @@ public class CSV {
 		return c.equals(comma);
 	}
 	
+	public String comma () {
+		return comma;
+	}
+	
 	public boolean escape (String c) {
 		return c.equals(escape);
+	}
+	
+	public String escape () {
+		return escape;
 	}
 	
 	public boolean quote (String c) {
 		return c.equals(quote);
 	}
 	
+	public String quote () {
+		return quote;
+	}
+	
 	public boolean newline (String c) {
 		return c.equals("\n") || c.equals("\r");
+	}
+	
+	public String newline () {
+		return "\n";
 	}
 	
 	public void newRow () {
@@ -152,6 +186,9 @@ public class CSV {
 				if (comma(thisChar)) {
 					addItem();
 					state = COMMA_STATE;
+				} else if (quote(thisChar)) {
+					addChar( thisChar );
+					state = QUOTE_DATA_STATE;
 				} else if (newline(thisChar)) {
 					addItem();
 					addRow();
@@ -186,6 +223,9 @@ public class CSV {
 					newRow();
 					addBlank();
 					state = COMMA_STATE;
+				} else if (quote(thisChar)) {
+					newRow();
+					state = QUOTE_DATA_STATE;
 				} else if (newline(thisChar)) {
 					// Output nothing and stay in this state
 				} else if (escape(thisChar)) {
@@ -201,10 +241,13 @@ public class CSV {
 			} else if (state == QUOTE_DATA_STATE) {
 				if (quote(thisChar)) {
 					state = QUOTE_END_STATE;
-					addItem();
 				} else if (escape(thisChar)) {
 					addChar( thisChar );
 					state = QUOTE_ESCAPE_STATE;
+				} else if (newline(thisChar)) {
+					addItem();
+					addRow();
+					state = LINE_END_STATE;
 				} else {
 					addChar( thisChar );
 					state = QUOTE_DATA_STATE;
@@ -212,13 +255,21 @@ public class CSV {
 
 			} else if (state == QUOTE_END_STATE) {
 				if (comma(thisChar)) {
+					addItem();
 					state = COMMA_STATE;
 				} else if (newline(thisChar)) {
+					addItem();
 					addRow();
 					state = LINE_END_STATE;
+				} else if (quote(thisChar)) {
+					addChar( quote() );
+					addChar( thisChar );
+					state = QUOTE_DATA_STATE;
 				} else {
-					// Output nothing and continue in the QUOTE_END_STATE
-					state = QUOTE_END_STATE;
+					addChar( quote() );
+					addChar( thisChar );
+					// continue in the QUOTE_END_STATE
+					state = DATA_STATE;
 				}
 
 			} else if (state == ESCAPE_STATE) {
@@ -253,25 +304,29 @@ public class CSV {
 	}
 	
 	public String line ( List<String> list ) {
-		String csv = "";
+		StringBuilder csv = new StringBuilder();
 		for (int i=0; i<list.size(); i++) {
-			if (i>0) csv += comma;
+			if (i>0) csv.append(comma());
 			String item = list.get(i);
-			if (item.indexOf(comma) < 0) {
-				csv += item;
+			if (item.indexOf(comma()) > -1) {
+				csv
+					.append(quote())
+					.append(item)
+					.append(quote());
 			} else {
-				csv += quote + item + quote;
+				csv
+					.append(item);
 			}
 		}
-		return csv + "\n";
+		return csv.append(newline()).toString();
 	}
 	
 	public String lines () {
-		String csvText = "";
+		StringBuilder csvText = new StringBuilder();
 		for (int i=0; i<data.size(); i++) {
-			csvText += line(i);
+			csvText.append( line(i) );
 		}
-		return csvText;
+		return csvText.toString();
 	}
 	
 	public String lastLine () {

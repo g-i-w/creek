@@ -16,7 +16,7 @@ public class CSVLookup extends CSV {
 		
 	// constructors
 	public CSVLookup () {
-		super( "", ",", "\\", "\"" );
+		super( ",", "\\", "\"" );
 		init();
 	}
 	
@@ -25,8 +25,18 @@ public class CSVLookup extends CSV {
 		init();
 	}
 
+	public CSVLookup ( String comma, String escape, String quote ) {
+		super( comma, escape, quote );
+		init();
+	}
+	
 	public CSVLookup ( String csv, String comma, String escape, String quote ) {
 		super( csv, comma, escape, quote );
+		init();
+	}
+	
+	public CSVLookup ( List<List<String>> data, String comma, String escape, String quote ) {
+		super( data, comma, escape, quote );
 		init();
 	}
 	
