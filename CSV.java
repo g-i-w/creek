@@ -244,10 +244,6 @@ public class CSV {
 				} else if (escape(thisChar)) {
 					addChar( thisChar );
 					state = QUOTE_ESCAPE_STATE;
-				} else if (newline(thisChar)) {
-					addItem();
-					addRow();
-					state = LINE_END_STATE;
 				} else {
 					addChar( thisChar );
 					state = QUOTE_DATA_STATE;

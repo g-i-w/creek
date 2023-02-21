@@ -113,6 +113,9 @@ public class CSVFile extends CSVLookup {
 	
 	public static void main ( String[] args ) {
 		try {
+		
+			// bash command: java creek.CSVFile creek/test_in.csv creek/test_out.csv > creek/test_results.txt
+			
 			// test input then output
 			// creek/test_in.csv -> test_in.csv_out.csv
 			
