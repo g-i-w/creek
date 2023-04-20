@@ -63,6 +63,31 @@ public class SimpleTable implements Table {
 		}
 	}
 	
+	public String[] row ( int row ) {
+		if (row > -1 && row < data.size()) {
+			List<String> rowList = data.get(row);
+			int rowLength = rowList.size();
+			String[] rowCopy = new String[rowLength];
+			for (int i=0; i<rowLength; i++) rowCopy[i] = rowList.get(i);
+			return rowCopy;
+		} else {
+			return new String[]{};
+		}
+	}
+	
+	public String[] col ( int col ) {
+		int colLength = data.size();
+		String[] colCopy = new String[colLength];
+		for (int i=0; i<colLength; i++) {
+			if (col > -1 && col < data.get(i).size()) {
+				colCopy[i] = data.get(i).get(col);
+			} else {
+				colCopy[i] = null;
+			}
+		}
+		return colCopy;
+	}
+	
 	public Table append ( Table table ) {
 		for (int row=0; row<table.rowCount(); row++) {
 			List<String> newRow = new ArrayList<>();
@@ -292,6 +317,17 @@ public class SimpleTable implements Table {
 		
 		System.out.println( table2.data() );
 		System.out.println( table2 );
+		
+		System.out.println( "row testing" );
+		System.out.println( Arrays.asList(table2.row( -1 )) );
+		System.out.println( Arrays.asList(table2.row( 1 )) );
+		System.out.println( Arrays.asList(table2.row( 4 )) );
+		
+		System.out.println( "col testing" );
+		System.out.println( Arrays.asList(table2.col( -1 )) );
+		System.out.println( Arrays.asList(table2.col( 1 )) );
+		System.out.println( Arrays.asList(table2.col( 2 )) );
+		System.out.println( Arrays.asList(table2.col( 4 )) );
 	}
 
 }
