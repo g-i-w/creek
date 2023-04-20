@@ -9,6 +9,7 @@ public interface Table {
 	public int colCount ( int row );
 
 	public Table append ( Table obj );
+	public Table append ( String[] row );
 	
 	public String serial ();
 }

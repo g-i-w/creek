@@ -77,6 +77,11 @@ public class SimpleTable implements Table {
 		return this;
 	}
 	
+	public Table append ( String[] row ) {
+		data.add( Arrays.asList( row ) );
+		return this;
+	}
+	
 	public String serial () {
 		StringBuilder serial = new StringBuilder();
 		for (List<String> row : data) {
