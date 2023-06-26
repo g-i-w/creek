@@ -27,12 +27,24 @@ public class CSVFile extends CSV {
 		writeLock.set( false );
 	}
 	
+	private String removeBOM ( String raw ) {
+		// remove Byte Order Mark (BOM)
+		if (
+			raw.charAt(0) == 0xEF &&
+			raw.charAt(1) == 0xBB &&
+			raw.charAt(2) == 0xBF
+		) return raw.substring(3);
+		return raw;
+	}
+	
 	public CSV readFile () throws Exception {
 		if (file.exists()) {
 			return new CSV(
-				new String(
-					Files.readAllBytes( file.toPath() ),
-					Charset.defaultCharset()
+				removeBOM(
+					new String(
+						Files.readAllBytes( file.toPath() ),
+						Charset.defaultCharset()
+					)
 				),
 				comma(),
 				escape(),
@@ -47,7 +59,7 @@ public class CSVFile extends CSV {
 		}
 	}
 
-	private CSVFile appendFile ( Table table ) {
+	private CSVFile writeFile ( Table table, boolean append ) {
 		try {
 			Files.write(
 				file.toPath(),
@@ -59,8 +71,9 @@ public class CSVFile extends CSV {
 						quote()
 					)
 				).serial().getBytes(),
-				StandardOpenOption.APPEND
+				( append ? StandardOpenOption.APPEND : StandardOpenOption.WRITE )
 			);
+			if (! append) super.data().clear();
 			super.append( table );
 		} catch (Exception e) {
 			onAppendException( e );
@@ -97,10 +110,16 @@ public class CSVFile extends CSV {
 	}
 	
 	
-	public Table append ( Table table ) {
-		System.out.println( "append in CSVFile" );
+	public Table write ( Table table ) {
 		obtainWriteLock();
-		appendFile( table );
+		writeFile( table, false );
+		releaseWriteLock();
+		return this;
+	}
+	
+	public Table append ( Table table ) {
+		obtainWriteLock();
+		writeFile( table, true );
 		releaseWriteLock();
 		return this;
 	}
@@ -112,6 +131,13 @@ public class CSVFile extends CSV {
 			System.out.println( "********\nf0 empty:\n"+f0 );
 			f0.append( SimpleTable.test() );
 			System.out.println( "********\nf0 with test() data:\n"+f0 );
+			f0.write(
+				new CSV(
+					"1,2,3\n"+
+					"A,B,C\n"
+				)
+			);
+			System.out.println( "********\nf0 overwritten:\n"+f0 );
 			
 			Thread.sleep(500);
 			

@@ -12,6 +12,7 @@ public interface Table {
 
 	public Table append ( Table obj );
 	public Table append ( String[] row );
+	public Table append ( List<String> row );
 	
 	public String serial ();
 }

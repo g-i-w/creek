@@ -98,12 +98,16 @@ public class SimpleTable implements Table {
 			}
 			data.add( newRow );
 		}
-		System.out.println( "append in SimpleTable, rowCount "+rowCount() );
 		return this;
 	}
 	
 	public Table append ( String[] row ) {
 		data.add( Arrays.asList( row ) );
+		return this;
+	}
+	
+	public Table append ( List<String> row ) {
+		append( row.toArray( new String[0] ) );
 		return this;
 	}
 	
@@ -314,6 +318,11 @@ public class SimpleTable implements Table {
 		System.out.println( table );
 		
 		SimpleTable table2 = new SimpleTable( table );
+		List<String> newRow = new ArrayList<>();
+		newRow.add( "A" );
+		newRow.add( "B" );
+		newRow.add( "C" );
+		table2.append( newRow );
 		
 		System.out.println( table2.data() );
 		System.out.println( table2 );
