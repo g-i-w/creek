@@ -85,21 +85,33 @@ public class CSVFile extends CSV {
 	// constructors
 
 	public CSVFile ( String path ) throws Exception {
-		this( path, ",", "\\", "\"" );
+		this( path, true, ",", "\\", "\"" );
+	}
+
+	public CSVFile ( String path, boolean read ) throws Exception {
+		this( path, read, ",", "\\", "\"" );
 	}
 
 	public CSVFile ( String path, String comma, String escape, String quote ) throws Exception {
-		this( new File(path), comma, escape, quote );
+		this( new File(path), true, comma, escape, quote );
+	}
+
+	public CSVFile ( String path, boolean read, String comma, String escape, String quote ) throws Exception {
+		this( new File(path), read, comma, escape, quote );
 	}
 
 	public CSVFile ( File file ) throws Exception {
-		this( file, ",", "\\", "\"" );
+		this( file, true, ",", "\\", "\"" );
 	}
 
-	public CSVFile ( File file, String comma, String escape, String quote ) throws Exception {
+	public CSVFile ( File file, boolean read ) throws Exception {
+		this( file, read, ",", "\\", "\"" );
+	}
+
+	public CSVFile ( File file, boolean read, String comma, String escape, String quote ) throws Exception {
 		super( comma, escape, quote );
 		this.file = file;
-		super.append( readFile() );
+		if (read) super.append( readFile() );
 		releaseWriteLock();
 	}
 	
