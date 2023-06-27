@@ -2,7 +2,7 @@ package creek;
 
 import java.util.*;
 
-public class CSV extends SimpleTable {
+public class CSV extends AbstractTable {
 
 	// settings
 	private String comma;
@@ -26,46 +26,38 @@ public class CSV extends SimpleTable {
 	};*/
 
 
-	
-	// constructors
-
-	public CSV ( Table obj ) {
-		this( obj, ",", "\\", "\"" );
-	}
-
-	public CSV ( Table obj, String comma ) {
-		this( obj, comma, "\\", "\"" );
-	}
-
-	public CSV ( Table obj, String comma, String escape, String quote ) {
-		super( obj );
+	private void init ( String comma, String escape, String quote ) {
 		this.comma = comma;
 		this.escape = escape;
 		this.quote = quote;
+		data( new ArrayList<List<String>>() );
 	}
+
 	
-	
+	// constructors
+
+	public CSV () {
+		this( null, ",", "\\", "\"" );
+	}
+
 	public CSV ( String raw ) {
 		this( raw, ",", "\\", "\"" );
 	}
 
+	public CSV ( String comma, String escape, String quote ) {
+		this( null, comma, escape, quote );
+	}
+
 	public CSV ( String raw, String comma, String escape, String quote ) {
-		this.comma = comma;
-		this.escape = escape;
-		this.quote = quote;
-		data( raw );
+		init( comma, escape, quote );
+		if (raw != null) append( raw );
 	}
 	
-	public CSV () {
-		this( ",", "\\", "\"" );
+	public CSV ( Table table ) {
+		init( ",", "\\", "\"" );
+		append( table );
 	}
-
-	public CSV ( String comma, String escape, String quote ) {
-		this.comma = comma;
-		this.escape = escape;
-		this.quote = quote;
-	}
-
+	
 	
 	
 	public String serial () {
@@ -132,8 +124,9 @@ public class CSV extends SimpleTable {
 	
 	
 	// convert CSV to data
-	private void data ( String csv ) {
-	
+	public Table append ( String csv ) {
+		obtainWriteLock();
+		
 		for (int i=0; i<csv.length(); i++) {
 		
 			String thisChar = csv.substring(i, i+1);
@@ -256,6 +249,9 @@ public class CSV extends SimpleTable {
 			//System.out.println( "thisChar: '"+thisChar+"', state: "+reverse_state[state] );
 		}
 		finalRow();
+		
+		releaseWriteLock();
+		return this;
 	}
 
 
@@ -277,8 +273,8 @@ public class CSV extends SimpleTable {
 
 	public static void main ( String[] args ) {
 	
-		SimpleTable csv0 = CSV.test();
-		SimpleTable csv1 = new CSV( csv0 );
+		CSV csv0 = CSV.test();
+		CSV csv1 = new CSV( csv0 );
 		
 		csv1.append(csv0);
 		

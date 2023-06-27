@@ -2,19 +2,19 @@ package creek;
 
 import java.util.*;
 
-public class HTML extends SimpleTable {
+public class HTML extends AbstractTable {
 
 
-	public HTML ( Table obj ) {
-		super( obj );
-		
+	public HTML ( Table table ) {
+		data( new ArrayList<List<String>>() );
+		append( table );
 	}
 
-	// TODO
-	//public HTML ( String raw ) {
-		// data( raw );
-	//}
-		
+	public Table append ( String raw ) {
+		// TODO
+		return this;
+	}
+	
 	public String serial () {
 		StringBuilder html = new StringBuilder();
 		html.append( "<table>\n" );
@@ -47,8 +47,10 @@ public class HTML extends SimpleTable {
 			",\r\n";
 		System.out.println( "\ncsv:\n"+csv );
 			
-		SimpleTable csv0 = new CSV( csv );
-		SimpleTable html = new HTML( csv0 );
+		Table csv0 = new SimpleTable( new CSV( csv ) );
+		System.out.println( csv0 );
+		
+		HTML html = new HTML( csv0 );
 		String serial0 = csv0.serial();
 		String serial1 = html.serial();
 		
