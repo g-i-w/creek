@@ -66,7 +66,7 @@ public class CSV extends AbstractTable {
 			for (int i=0; i<row.size(); i++) {
 				if (i>0) csv.append(comma());
 				String item = row.get(i);
-				if (item == null) continue;
+				if (item == null) item = "";
 				if (item.indexOf(quote()) > -1) {
 					csv
 						.append(quote())

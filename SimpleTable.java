@@ -45,6 +45,7 @@ public class SimpleTable extends AbstractTable {
 			int itemCount = row.size();
 			for (int col=0; col<itemCount; col++) {
 				String item = row.get(col);
+				if (item == null) continue;
 				if (colWidth.get(col) == null || item.length() > colWidth.get(col).intValue()) colWidth.put( col, item.length() );
 			}
 		}
@@ -54,6 +55,7 @@ public class SimpleTable extends AbstractTable {
 			int itemCount = row.size();
 			for (int col=0; col<itemCount; col++) {
 				String item = row.get(col);
+				if (item == null) item = "";
 				serial.append( item );
 				if (col<itemCount-1) for (int spaces=item.length(); spaces<colWidth.get(col)+4; spaces++) serial.append( " " );
 			}
