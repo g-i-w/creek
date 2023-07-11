@@ -8,9 +8,6 @@ public abstract class AbstractTable implements Table {
 	// data
 	private List<List<String>> data;
 	
-	// stats
-	private Map<Integer,Integer> maxItemLength = new HashMap<>();
-
 	// conversion process tools
 	private List<String> rowUnderConstruction;
 	private StringBuilder itemUnderConstruction;
@@ -32,13 +29,17 @@ public abstract class AbstractTable implements Table {
 		writeLock.set( false );
 	}
 	
-	private void checkItemLength ( String item, int col ) {
-		if (maxItemLength.get(col) == null || item.length() > maxItemLength.get(col).intValue())
-			maxItemLength.put( col, item.length() );
+	// Table interface
+	
+	public List<List<String>> data () {
+		return data;
 	}
 	
-	
-	// Table interface
+	public void data ( List<List<String>> data ) {
+		obtainWriteLock();
+		this.data = data;
+		releaseWriteLock();
+	}
 	
 	public String item ( int row, int col ) {
 		if (row > -1 && row < data.size() && col > -1 && col < data.get(row).size()) {
@@ -73,32 +74,26 @@ public abstract class AbstractTable implements Table {
 		return colCopy;
 	}
 	
-	public Table append ( Table table ) {
+	public Table alias ( Table table ) {
 		if (table == null) return this;
 		obtainWriteLock();
-		for (int row=0; row<table.rowCount(); row++) {
-			List<String> newRow = new ArrayList<>();
-			for (int col=0; col<table.colCount( row ); col++) {
-				String item = table.item( row, col );
-				newRow.add( item );
-				checkItemLength( item, col );
-			}
-			data.add( newRow );
-		}
+		data = table.data();
 		releaseWriteLock();
+		return this;
+	}
+	
+	public Table append ( Table table ) {
+		if (table == null) return this;
+		int rowsSafe = table.data().size();
+		// guards against a java.util.ConcurrentModificationException if a table appends itself
+		for (int row=0; row<rowsSafe; row++) append( table.data().get( row ) );
 		return this;
 	}
 	
 	public Table append ( List<String> row ) {
 		if (row == null) return this;
 		obtainWriteLock();
-		List<String> newRow = new ArrayList<>();
-		for (int i=0; i<row.size(); i++) {
-			String item = row.get(i);
-			newRow.add( item );
-			checkItemLength( item, i );
-		}
-		data.add( newRow );
+		data.add( row );
 		releaseWriteLock();
 		return this;
 	}
@@ -127,21 +122,7 @@ public abstract class AbstractTable implements Table {
 		}
 	}
 	
-	public int maxItemLength ( int col ) {
-		return maxItemLength.get(col);
-	}
-	
-	
-	
 	// "friendly" tools for child classes
-	
-	List<List<String>> data () {
-		return data;
-	}
-	
-	void data ( List<List<String>> data ) {
-		this.data = data;
-	}
 	
 	void newRow () {
 		rowUnderConstruction = new ArrayList<String>();
@@ -165,7 +146,6 @@ public abstract class AbstractTable implements Table {
 	void addItem () {
 		String item = itemUnderConstruction.toString();
 		if (rowUnderConstruction == null) newRow();
-		checkItemLength( item, rowUnderConstruction.size() );
 		rowUnderConstruction.add( item );
 		itemUnderConstruction = null;
 	}

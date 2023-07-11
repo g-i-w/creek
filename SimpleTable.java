@@ -28,7 +28,7 @@ public class SimpleTable extends AbstractTable {
 	
 	public SimpleTable ( Table table ) {
 		this();
-		append( table );
+		alias( table );
 	}
 	
 	public SimpleTable ( String serial ) {
@@ -38,25 +38,35 @@ public class SimpleTable extends AbstractTable {
 	
 	
 	public String serial () {
+		obtainWriteLock();
+		// find column widths
+		Map<Integer,Integer> colWidth = new HashMap<>();
+		for (List<String> row : data()) {
+			int itemCount = row.size();
+			for (int col=0; col<itemCount; col++) {
+				String item = row.get(col);
+				if (colWidth.get(col) == null || item.length() > colWidth.get(col).intValue()) colWidth.put( col, item.length() );
+			}
+		}
+		// build output string
 		StringBuilder serial = new StringBuilder();
 		for (List<String> row : data()) {
 			int itemCount = row.size();
-			for (int i=0; i<itemCount; i++) {
-				String item = row.get(i);
+			for (int col=0; col<itemCount; col++) {
+				String item = row.get(col);
 				serial.append( item );
-				if (i<itemCount-1) {
-					for (int spaces=item.length(); spaces<maxItemLength(i)+4; spaces++) serial.append( " " );
-				}
+				if (col<itemCount-1) for (int spaces=item.length(); spaces<colWidth.get(col)+4; spaces++) serial.append( " " );
 			}
 			serial.append( "\n" );
 		}
+		releaseWriteLock();
 		return serial.toString();
 	}
 	
 	
 	// convert serial to data
 	public Table append ( String serial ) {
-	
+		obtainWriteLock();
 		for (Character c : serial.toCharArray()) {
 
 			// transition and output logic
@@ -159,6 +169,7 @@ public class SimpleTable extends AbstractTable {
 			//System.out.println( "thisChar: '"+c+"', state: "+reverse_state[state] );
 		}
 		finalRow();
+		releaseWriteLock();
 		return this;
 	}
 	
