@@ -27,27 +27,31 @@ public class CSVFile implements TableFile {
 		this( new File(path), true, null );
 	}
 
-	public CSVFile ( String path, boolean read ) throws Exception {
-		this( new File(path), read, null );
+	public CSVFile ( String path, boolean append ) throws Exception {
+		this( new File(path), append, null );
 	}
 
-	public CSVFile ( String path, boolean read, CSV csv ) throws Exception {
-		this( new File(path), read, csv );
+	public CSVFile ( String path, boolean append, CSV csv ) throws Exception {
+		this( new File(path), append, csv );
 	}
 
 	public CSVFile ( File file ) throws Exception {
 		this( file, true, null );
 	}
 
-	public CSVFile ( File file, boolean read ) throws Exception {
-		this( file, read, null );
+	public CSVFile ( File file, boolean append ) throws Exception {
+		this( file, append, null );
 	}
 
-	public CSVFile ( File file, boolean read, CSV csv ) throws Exception {
+	public CSVFile ( File file, boolean append, CSV csv ) throws Exception {
 		this.file = file;
 		this.csv = ( csv == null ? new CSV() : csv );
-		if (read) read();
-		else clear();
+		if (append) {
+			read();
+			append( csv );
+		} else {
+			write( csv );
+		}
 	}
 	
 
@@ -92,15 +96,15 @@ public class CSVFile implements TableFile {
 	}
 	
 	public TableFile write () throws Exception {
-		return write( null, false );
+		return write( csv, false );
 	}
 	
 	public TableFile write ( Table table, boolean append ) throws Exception {
-		CSV newCsv = (
-			table == null ?
-			csv :
-			new CSV( csv.comma(), csv.escape(), csv.quote() )
-		);
+		if (table == null) {
+			if (! append) clear();
+			return this;
+		}
+		CSV newCsv = new CSV( csv.comma(), csv.escape(), csv.quote() );
 		newCsv.append( table );
 		Files.write(
 			file.toPath(),
@@ -120,7 +124,7 @@ public class CSVFile implements TableFile {
 	public static void main ( String[] args ) {
 	
 		try {
-			CSVFile f0 = new CSVFile( args[0] );
+			CSVFile f0 = new CSVFile( args[0], false );
 			System.out.println( "********\nf0 empty:\n"+f0 );
 			f0.append( SimpleTable.test() );
 			System.out.println( "********\nf0 with test() data:\n"+f0 );
@@ -134,8 +138,8 @@ public class CSVFile implements TableFile {
 			
 			Thread.sleep(500);
 			
-			CSVFile f1 = new CSVFile( args[0]+"_2.csv", true, new CSV() );
-			System.out.println( "********\nf1 empty:\n"+f1 );
+			CSVFile f1 = new CSVFile( args[0]+"_2.csv", true );
+			System.out.println( "********\nf1 as-is:\n"+f1 );
 			f1.append( f0.table() );
 			System.out.println( "********\nf1 with f0 appended:\n"+f1 );
 			

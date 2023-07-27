@@ -87,7 +87,7 @@ public class SimpleTable extends AbstractTable {
 					state = ESCAPE_STATE;
 				} else {
 					newRow();
-					addChar( c );
+					buildItem( c );
 					state = DATA_STATE;
 				}
 
@@ -102,7 +102,7 @@ public class SimpleTable extends AbstractTable {
 				} else if (c == '\\') {
 					state = ESCAPE_STATE;
 				} else {
-					addChar( c );
+					buildItem( c );
 					state = DATA_STATE;
 				}
 
@@ -111,7 +111,7 @@ public class SimpleTable extends AbstractTable {
 					addRow();
 					state = LINE_END_STATE;
 				} else if (! Character.isWhitespace(c)) {
-					addChar( c );
+					buildItem( c );
 					state = DATA_STATE;
 				} else if (c == '"') {
 					state = QUOTE_DATA_STATE;
@@ -134,7 +134,7 @@ public class SimpleTable extends AbstractTable {
 					state = ESCAPE_STATE;
 				} else {
 					newRow();
-					addChar( c );
+					buildItem( c );
 					state = DATA_STATE;
 				}
 
@@ -142,10 +142,10 @@ public class SimpleTable extends AbstractTable {
 				if (c == '"') {
 					state = QUOTE_END_STATE;
 				} else if (c == '\\') {
-					addChar( c );
+					buildItem( c );
 					state = ESCAPE_STATE;
 				} else {
-					addChar( c );
+					buildItem( c );
 					state = QUOTE_DATA_STATE;
 				}
 
@@ -159,12 +159,12 @@ public class SimpleTable extends AbstractTable {
 					state = SPACE_STATE;
 				} else {
 					addItem();
-					addChar( c );
+					buildItem( c );
 					state = DATA_STATE;
 				}
 
 			} else if (state == ESCAPE_STATE) {
-				addChar( c );
+				buildItem( c );
 				state = DATA_STATE;
 			}
 			

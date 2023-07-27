@@ -149,7 +149,7 @@ public class CSV extends AbstractTable {
 					state = ESCAPE_STATE;
 				} else {
 					newRow();
-					addString( thisChar );
+					buildItem( thisChar );
 					state = DATA_STATE;
 				}
 
@@ -164,7 +164,7 @@ public class CSV extends AbstractTable {
 				} else if (escape(thisChar)) {
 					state = ESCAPE_STATE;
 				} else {
-					addString( thisChar );
+					buildItem( thisChar );
 					state = DATA_STATE;
 				}
 
@@ -182,7 +182,7 @@ public class CSV extends AbstractTable {
 					// Output nothing and go to ESCAPE_STATE
 					state = ESCAPE_STATE;
 				} else {
-					addString( thisChar );
+					buildItem( thisChar );
 					state = DATA_STATE;
 				}
 
@@ -202,7 +202,7 @@ public class CSV extends AbstractTable {
 					state = ESCAPE_STATE;
 				} else {
 					newRow();
-					addString( thisChar );
+					buildItem( thisChar );
 					state = DATA_STATE;
 				}
 
@@ -211,10 +211,10 @@ public class CSV extends AbstractTable {
 					state = QUOTE_END_STATE;
 				} else if (escape(thisChar)) {
 					// here we have just the traditional escape character that will cause us to ignore anything
-					addString( thisChar );
+					buildItem( thisChar );
 					state = QUOTE_ESCAPE_STATE;
 				} else {
-					addString( thisChar );
+					buildItem( thisChar );
 					state = QUOTE_DATA_STATE;
 				}
 
@@ -228,21 +228,21 @@ public class CSV extends AbstractTable {
 					state = LINE_END_STATE;
 				} else if (quote(thisChar)) {
 					// here we find out it's not the end of the quoted, just an escaped quote (by using two quotes) inside the quoted
-					addString( quote() );
-					addString( thisChar );
+					buildItem( quote() );
+					buildItem( thisChar );
 					state = QUOTE_DATA_STATE;
 				} else {
 					// this is the edge case where you have raw data trailing the quoted data
-					addString( thisChar );
+					buildItem( thisChar );
 					state = DATA_STATE;
 				}
 
 			} else if (state == ESCAPE_STATE) {
-				addString( thisChar );
+				buildItem( thisChar );
 				state = DATA_STATE;
 
 			} else if (state == QUOTE_ESCAPE_STATE) {
-				addString( thisChar );
+				buildItem( thisChar );
 				state = QUOTE_DATA_STATE;
 
 			}
