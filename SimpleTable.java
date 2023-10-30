@@ -27,7 +27,6 @@ public class SimpleTable extends AbstractTable {
 	}
 	
 	public SimpleTable ( Table table ) {
-		this();
 		alias( table );
 	}
 	
@@ -190,17 +189,17 @@ public class SimpleTable extends AbstractTable {
 	
 	public static void main ( String[] args ) {
 		SimpleTable table = SimpleTable.test();
-		System.out.println( table.data() );
+		System.out.println( "table:\n"+table.data() );
 		System.out.println( table );
 		
 		SimpleTable table2 = new SimpleTable( table );
-		List<String> newRow = new ArrayList<>();
-		newRow.add( "A" );
-		newRow.add( "B" );
-		newRow.add( "C" );
+		String[] newRow = new String[]{ "A", "B", "C" };
+		table.append( newRow );
 		table2.append( newRow );
 		
-		System.out.println( table2.data() );
+		System.out.println( "table:\n"+table.data() );
+		System.out.println( table );
+		System.out.println( "table2:\n"+table2.data() );
 		System.out.println( table2 );
 		
 		System.out.println( "row testing" );

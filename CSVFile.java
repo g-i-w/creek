@@ -24,38 +24,42 @@ public class CSVFile implements TableFile {
 	// constructors
 
 	public CSVFile ( String path ) throws Exception {
-		this( new File(path), true, null );
+		this( new File(path), true, null, "," );
 	}
 
 	public CSVFile ( String path, boolean append ) throws Exception {
-		this( new File(path), append, null );
+		this( new File(path), append, null, "," );
 	}
 
-	public CSVFile ( String path, boolean append, CSV csv ) throws Exception {
-		this( new File(path), append, csv );
+	public CSVFile ( String path, boolean append, Table table ) throws Exception {
+		this( new File(path), append, table, "," );
 	}
 
 	public CSVFile ( File file ) throws Exception {
-		this( file, true, null );
+		this( file, true, null, "," );
 	}
 
 	public CSVFile ( File file, boolean append ) throws Exception {
-		this( file, append, null );
+		this( file, append, null, "," );
 	}
 
-	public CSVFile ( File file, boolean append, CSV csv ) throws Exception {
+	public CSVFile ( File file, boolean append, Table table, String comma ) throws Exception {
 		this.file = file;
-		this.csv = ( csv == null ? new CSV() : csv );
+		csv = new CSV( comma, "\\", "\"" ); // create blank CSV object
 		if (append) {
 			read();
-			append( csv );
+			if (table!=null) append( new CSV( table ) ); // append table data to both file and CSV
 		} else {
-			write( csv );
+			write( table );
 		}
 	}
 	
 
 	// TableFile interface
+	
+	public File file () {
+		return file;
+	}
 	
 	public Table table () {
 		return csv;
@@ -72,13 +76,13 @@ public class CSVFile implements TableFile {
 
 	public TableFile read () throws Exception {
 		if (file.exists()) {
-			csv = new CSV(
+			csv = new CSV (
 				removeBOM(
 					new String(
 						Files.readAllBytes( file.toPath() ),
 						Charset.defaultCharset()
 					)
-				), csv.comma(), csv.escape(), csv.quote()
+				), csv.comma()
 			);
 		} else {
 			clear();
@@ -101,18 +105,20 @@ public class CSVFile implements TableFile {
 	
 	public TableFile write ( Table table, boolean append ) throws Exception {
 		if (table == null) {
-			if (! append) clear();
+			if (! append) clear(); // write operation
 			return this;
 		}
 		CSV newCsv = new CSV( csv.comma(), csv.escape(), csv.quote() );
 		newCsv.append( table );
+		if (!file.exists()) clear();
 		Files.write(
 			file.toPath(),
 			newCsv.serial().getBytes(),
 			( append ? StandardOpenOption.APPEND : StandardOpenOption.WRITE )
 		);
-		if (append) csv.append( newCsv );
-		else csv = newCsv;
+		if (append) csv.append( newCsv ); // append operation
+		else csv = newCsv; // write operation
+		//System.out.println( "CSVFile: "+csv.data() );
 		return this;
 	}
 	

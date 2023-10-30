@@ -3,9 +3,13 @@ package creek;
 import java.util.*;
 
 public interface Table {
-	public List<List<String>> data ();
 	public Table data ( List<List<String>> data );
+	public List<List<String>> data ();
 	
+	public List<List<String>> last ( int lastRows );
+	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive );
+	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive );
+		
 	public String item ( int row, int col );
 	public String[] row ( int row );
 	public String[] col ( int col );

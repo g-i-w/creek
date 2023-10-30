@@ -101,9 +101,9 @@ public abstract class AbstractTable implements Table {
 	
 	public Table append ( Table table ) {
 		if (table == null || table.data() == null) return this;
-		int rowsSafe = table.data().size();
+		int rowsSafe = table.rowCount();
 		// guards against a java.util.ConcurrentModificationException if a table appends itself
-		for (int row=0; row<rowsSafe; row++) append( table.data().get( row ) );
+		for (int row=0; row<rowsSafe; row++) append( table.row( row ) );
 		return this;
 	}
 	
@@ -122,6 +122,33 @@ public abstract class AbstractTable implements Table {
 		return this;
 	}
 	
+	public List<List<String>> last ( int lastRows ) {
+		int rowCount = rowCount();
+		return slice( rowCount-lastRows, rowCount );
+	}
+	
+	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive ) {
+		int rowCount = rowCount();
+		if (startRowInclusive < 0) startRowInclusive = 0;
+		if (endRowExclusive > rowCount) endRowExclusive = rowCount;
+		List<List<String>> aSlice = new ArrayList<>();
+		for (int i=startRowInclusive; i<endRowExclusive; i++) aSlice.add( data.get(i) );
+		return aSlice;
+	}
+	
+	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive ) {
+		List<List<String>> aSlice = new ArrayList<>();
+		for (int a=startRowInclusive; a<endRowExclusive; a++) {
+			List<String> row = new ArrayList<>();
+			for (int b=startColInclusive; b<endColExclusive; b++) {
+				row.add( item(a,b) );
+			}
+			aSlice.add( row );
+		}
+		return aSlice;
+	}
+
+
 	////////////////// Abstract method //////////////////
 	public abstract Table append ( String raw );
 	

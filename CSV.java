@@ -37,24 +37,36 @@ public class CSV extends AbstractTable {
 	// constructors
 
 	public CSV () {
-		this( null, ",", "\\", "\"" );
-	}
-
-	public CSV ( String raw ) {
-		this( raw, ",", "\\", "\"" );
+		init( ",", "\\", "\"" );
 	}
 
 	public CSV ( String comma, String escape, String quote ) {
-		this( null, comma, escape, quote );
-	}
-
-	public CSV ( String raw, String comma, String escape, String quote ) {
 		init( comma, escape, quote );
-		if (raw != null) append( raw );
 	}
 	
+
+	// raw String
+	
+	public CSV ( String raw ) {
+		init( ",", "\\", "\"" );
+		append( raw );
+	}
+
+	public CSV ( String raw, String comma ) {
+		init( comma, "\\", "\"" );
+		append( raw );
+	}
+	
+	
+	// Table object
+
 	public CSV ( Table table ) {
 		init( ",", "\\", "\"" );
+		alias( table );
+	}
+	
+	public CSV ( Table table, String comma ) {
+		init( comma, "\\", "\"" );
 		alias( table );
 	}
 	

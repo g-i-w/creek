@@ -1,6 +1,10 @@
 package creek;
 
+import java.io.File;
+
 public interface TableFile {
+
+	public File file ();
 
 	public Table table ();
 
