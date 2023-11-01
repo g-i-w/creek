@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface LogFile {
 
-	public SortTable table ();
+	public SetTable table ();
 	
 	public LogFile trimmed ( int rows ) throws Exception;
 	

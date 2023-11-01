@@ -2,7 +2,7 @@ package creek;
 
 import java.util.*;
 
-public class IndexedTable extends SimpleTable implements SortTable {
+public class IndexedTable extends SimpleTable implements SetTable {
 
 	private Map<Integer,NavigableMap<String,List<String>>> index = new HashMap<>();
 	
@@ -31,21 +31,21 @@ public class IndexedTable extends SimpleTable implements SortTable {
 
 	// SortedTable interface
 
-	public SortTable sort ( int col ) {
+	public SetTable set ( int col ) {
 		if (! index.containsKey(col)) return null;
 		return new IndexedTable( index.get(col).values() );
 	}
 
-	public SortTable sortReverse ( int col ) {
+	public SetTable setReverse ( int col ) {
 		if (! index.containsKey(col)) return null;
 		return new IndexedTable( index.get(col).descendingMap().values() );
 	}
 
-	public SortTable last ( int col, String thisAndFollowing ) {
+	public SetTable last ( int col, String thisAndFollowing ) {
 		return slice( col, thisAndFollowing, index.get(col).lastEntry().getKey() );
 	}
 	
-	public SortTable slice ( int col, String thisAndFollowing, String approachingThisLimit ) {
+	public SetTable slice ( int col, String thisAndFollowing, String approachingThisLimit ) {
 		if (! index.containsKey(col)) return null;
 		// get the column index
 		NavigableMap<String,List<String>> thisCol = index.get(col);
@@ -68,9 +68,9 @@ public class IndexedTable extends SimpleTable implements SortTable {
 			"c third\n"+
 			"b fourth\n"
 		);
-		SortTable indexed = new IndexedTable( simple );
+		SetTable indexed = new IndexedTable( simple );
 		System.out.println( "toString():\n"+indexed );
-		System.out.println( "sortReverse(col 0):\n"+indexed.sortReverse( 0 ) );
+		System.out.println( "setReverse(col 0):\n"+indexed.setReverse( 0 ) );
 		System.out.println( "slice(col 0, aa-z):\n"+indexed.slice( 0, "aa", "z" ) );
 		// inherited
 		System.out.println( "Inherited last(3):\n"+indexed.last( 3 ) );

@@ -50,7 +50,7 @@ public class CSVLog extends CSVFile implements LogFile {
 	
 	// LogFile interface
 
-	public SortTable table () {
+	public SetTable table () {
 		return new IndexedTable( super.table() );
 	}
 	
@@ -60,8 +60,8 @@ public class CSVLog extends CSVFile implements LogFile {
 	}
 	
 	public LogFile append ( List<String> sample ) throws Exception {
-		ArrayList<String> timeSample = new ArrayList<>( sample );
-		timeSample.add( 0, timestamp() );
+		LinkedList<String> timeSample = new LinkedList<>( sample );
+		timeSample.addFirst( timestamp() );
 		super.append( (new CSV()).append(timeSample) );
 		return this;
 	}
