@@ -13,6 +13,8 @@ public class CSVFile implements TableFile {
 	private static String removeBOM ( String raw ) {
 		// remove Byte Order Mark (BOM)
 		if (
+			raw != null &&
+			raw.length() > 3 &&
 			raw.charAt(0) == 0xEF &&
 			raw.charAt(1) == 0xBB &&
 			raw.charAt(2) == 0xBF

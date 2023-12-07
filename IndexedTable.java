@@ -29,7 +29,7 @@ public class IndexedTable extends SimpleTable implements SetTable {
 		return super.append( row );
 	}
 
-	// SortedTable interface
+	// SetTable interface
 
 	public SetTable set ( int col ) {
 		if (! index.containsKey(col)) return null;

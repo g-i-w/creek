@@ -7,7 +7,6 @@ public interface Filter extends Table {
 	public Filter first ( int rows );
 	public Filter first ( int column, String lastVal );
 	
-	public Filter last ( int rows );
 	public Filter last ( int column, String firstVal );
 
 	public Filter range ( int column, String minVal, String maxVal );

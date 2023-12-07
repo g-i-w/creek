@@ -45,13 +45,35 @@ public class FileActions {
 		return newFile;
 	}
 	
+	public static TableFile regexGroups ( File rawFile, TableFile tableFile, String regex ) throws Exception {
+		return tableFile.append(
+			Tables.regexGroups(
+				Files.readAllLines( rawFile.toPath() ),
+				regex
+			)
+		);
+	}
 	
-	public static void main ( String[] args ) throws Exception {
+	
+	// Test methods
+
+	public static void test_addSuffix ( String args[] ) throws Exception {
 		File file = new File( args[0] );
 		for( File f : FileActions.recurse( file ) ) {
 			System.out.println( f = addSuffix( f, "_TEST_SUFFIX_" ) );
 			f.createNewFile();
 		}
+	}
+	
+	public static void test_regexGroups ( String args[] ) throws Exception {
+		System.out.println(
+			regexGroups( new File(args[0]), new CSVFile(args[1]), args[2] )
+		);
+	}
+
+	public static void main ( String[] args ) throws Exception {
+		test_addSuffix( args );
+		test_regexGroups( args );
 	}
 
 }

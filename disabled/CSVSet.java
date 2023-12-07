@@ -15,7 +15,7 @@ public class CSVSet extends CSVLog {
 
 	public SetTable set () {
 		SetTable slice =
-			.table()
+			table()
 			.set(1) // order column
 			.slice( 0, table().rowCount(), 3, table().colCount() ); // remove first 3 columns
 		SetTable enabled = new IndexedTable();

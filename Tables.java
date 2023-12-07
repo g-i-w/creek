@@ -1,6 +1,7 @@
 package creek;
 
 import java.util.*;
+import java.util.regex.*;
 
 public class Tables {
 
@@ -73,6 +74,22 @@ public class Tables {
 		return html.toString();
 	}
 		
+	public static Table regexGroups ( List<String> rawLines, String regex ) throws Exception {
+		Table tempTable = new CSV();
+		Pattern pattern = Pattern.compile( regex );
+		for (String rawLine : rawLines) {
+			Matcher matcher = pattern.matcher( rawLine );
+			List<String> tableLine = new ArrayList<>();
+			while (matcher.find()) {
+				for (int i=1; i<=matcher.groupCount(); i++) {
+					tableLine.add( matcher.group(i) );
+				}
+			}
+			tempTable.append( tableLine );
+		}
+		return tempTable;
+	}
+	
 	public static void main ( String[] args ) {
 		Table st = (new SimpleTable()).append(
 			"a  b  c  d  \n"+
