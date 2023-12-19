@@ -261,6 +261,7 @@ public class CSV extends AbstractTable {
 			
 			//System.out.println( "thisChar: '"+thisChar+"', state: "+reverse_state[state] );
 		}
+		state = LINE_START_STATE;
 		finalRow();
 		
 		releaseWriteLock();
