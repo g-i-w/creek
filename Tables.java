@@ -73,10 +73,28 @@ public class Tables {
 		html.append("</table>\n");
 		return html.toString();
 	}
+
+	public static Table regexGroups ( List<String> rawLines ) throws Exception {
+		return regexGroups ( rawLines, "(\\w+)" );
+	}
 		
 	public static Table regexGroups ( List<String> rawLines, String regex ) throws Exception {
-		Table tempTable = new CSV();
-		Pattern pattern = Pattern.compile( regex );
+		return regexGroups ( rawLines, regex, new CSV() );
+	}
+	
+	public static Map<String,Pattern> regexCache = null;
+	
+	public static Pattern regexPattern ( String regex ) {
+		if (regexCache==null) regexCache = new HashMap<>();
+		if (! regexCache.containsKey(regex)) {
+			Pattern pattern = Pattern.compile( regex );
+			regexCache.put(regex, pattern);
+		}
+		return regexCache.get( regex );
+	}
+		
+	public static Table regexGroups ( List<String> rawLines, String regex, Table table ) throws Exception {
+		Pattern pattern = regexPattern( regex );
 		for (String rawLine : rawLines) {
 			Matcher matcher = pattern.matcher( rawLine );
 			List<String> tableLine = new ArrayList<>();
@@ -85,9 +103,15 @@ public class Tables {
 					tableLine.add( matcher.group(i) );
 				}
 			}
-			tempTable.append( tableLine );
+			table.append( tableLine );
 		}
-		return tempTable;
+		return table;
+	}
+	
+	public static boolean regexFound ( String line, String regex ) throws Exception {
+		Pattern pattern = regexPattern( regex );
+		Matcher matcher = pattern.matcher( line );
+		return matcher.find();
 	}
 	
 	public static void main ( String[] args ) {

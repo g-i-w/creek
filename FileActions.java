@@ -3,6 +3,7 @@ package creek;
 import java.util.*;
 import java.io.*;
 import java.nio.file.*;
+import java.nio.charset.*;
 
 public class FileActions {
 
@@ -44,11 +45,59 @@ public class FileActions {
 		if (newFile.exists()) throw new Exception( newPath+" already exists!" );
 		return newFile;
 	}
+
+	public static List<String> readLines ( File file ) throws Exception {
+		return Files.readAllLines( file.toPath() );
+	}
 	
+	public static byte[] readBytes ( File file ) throws Exception {
+		return Files.readAllBytes( file.toPath() );
+	}
+	
+	public static String read ( File file ) throws Exception {
+		return new String( readBytes( file ), Charset.defaultCharset() );
+	}
+		
+	public static String read ( File file, Charset charset ) throws Exception {
+		return new String( readBytes( file ), charset );
+	}
+	
+	public static File write ( File file, byte[] bytes ) throws Exception {
+		return write( file, bytes, false );
+	}
+
+	public static File write ( File file, byte[] bytes, boolean append ) throws Exception {
+		Files.write(
+			file.toPath(),
+			bytes,
+			( append ? StandardOpenOption.APPEND : StandardOpenOption.WRITE )
+		);
+		return file;
+	}
+	
+
+	public static List<String> readLines ( String path ) throws Exception {
+		return readLines( new File( path ) );
+	}
+	
+	public static byte[] readBytes ( String path ) throws Exception {
+		return readBytes( new File( path ) );
+	}
+	
+	public static String read ( String path ) throws Exception {
+		return read( new File( path ) );
+	}
+	
+	public static File write ( String path, String text ) throws Exception {
+		return write( new File( path ), text.getBytes() );
+	}
+
+		
+
 	public static TableFile regexGroups ( File rawFile, TableFile tableFile, String regex ) throws Exception {
 		return tableFile.append(
 			Tables.regexGroups(
-				Files.readAllLines( rawFile.toPath() ),
+				readLines( rawFile ),
 				regex
 			)
 		);
