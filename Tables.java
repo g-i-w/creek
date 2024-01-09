@@ -1,7 +1,6 @@
 package creek;
 
 import java.util.*;
-import java.util.regex.*;
 
 public class Tables {
 
@@ -74,46 +73,6 @@ public class Tables {
 		return html.toString();
 	}
 
-	public static Table regexGroups ( List<String> rawLines ) throws Exception {
-		return regexGroups ( rawLines, "(\\w+)" );
-	}
-		
-	public static Table regexGroups ( List<String> rawLines, String regex ) throws Exception {
-		return regexGroups ( rawLines, regex, new CSV() );
-	}
-	
-	public static Map<String,Pattern> regexCache = null;
-	
-	public static Pattern regexPattern ( String regex ) {
-		if (regexCache==null) regexCache = new HashMap<>();
-		if (! regexCache.containsKey(regex)) {
-			Pattern pattern = Pattern.compile( regex );
-			regexCache.put(regex, pattern);
-		}
-		return regexCache.get( regex );
-	}
-		
-	public static Table regexGroups ( List<String> rawLines, String regex, Table table ) throws Exception {
-		Pattern pattern = regexPattern( regex );
-		for (String rawLine : rawLines) {
-			Matcher matcher = pattern.matcher( rawLine );
-			List<String> tableLine = new ArrayList<>();
-			while (matcher.find()) {
-				for (int i=1; i<=matcher.groupCount(); i++) {
-					tableLine.add( matcher.group(i) );
-				}
-			}
-			table.append( tableLine );
-		}
-		return table;
-	}
-	
-	public static boolean regexFound ( String line, String regex ) throws Exception {
-		Pattern pattern = regexPattern( regex );
-		Matcher matcher = pattern.matcher( line );
-		return matcher.find();
-	}
-	
 	public static void main ( String[] args ) {
 		Table st = (new SimpleTable()).append(
 			"a  b  c  d  \n"+

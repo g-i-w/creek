@@ -3,9 +3,14 @@ package creek;
 import java.util.*;
 
 public interface Table {
+	// Dangerous methods
 	public Table data ( List<List<String>> data );
 	public List<List<String>> data ();
 	
+	public Table info ( List<List<Map<String,String>>> info );
+	public List<List<Map<String,String>>> info ();
+	
+	// Thread-safe methods
 	public List<List<String>> last ( int lastRows );
 	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive );
 	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive );
@@ -13,6 +18,9 @@ public interface Table {
 	public String item ( int row, int col );
 	public String[] row ( int row );
 	public String[] col ( int col );
+	
+	public Map<String,String> itemInfo ( int row, int col, String key );
+	public Table itemInfo ( int row, int col, String key, String val );
 	
 	public int rowCount ();
 	public int colCount ( int row );
