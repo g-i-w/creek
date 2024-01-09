@@ -24,34 +24,61 @@ public class Regex {
 		return table ( rawLines, regex, null, new CSV() );
 	}
 	
-	public static Table table ( List<String> rawLines, String regex, String[] framing, Table table ) throws Exception {
-		Pattern pattern = pattern( regex );
-		List<String> tableLine = new ArrayList<>();
+	public static Table table ( List<String> rawLines, String regex, List<String> framing, Table table ) throws Exception {
 		for (String rawLine : rawLines) {
-			Matcher matcher = pattern.matcher( rawLine );
-			boolean found = false;
-			while (matcher.find()) {
-				tableLine.add( compound( matcher, framing ) );
-				found = true;
+			List<String> compounds = new ArrayList<>();
+			compounds( compounds, rawLine, regex, framing );
+			if (compounds.size()>0) {
+				table.append( compounds );
+				compounds = new ArrayList<>();
 			}
-			if (found) {
-				table.append( tableLine );
-				tableLine = new ArrayList<>();
+		}
+		return table;
+	}
+	
+	public static Table table ( List<String> rawLines, Table regexFraming, Table table ) throws Exception {
+		for (String rawLine : rawLines) {
+			List<String> compounds = new ArrayList<>();
+			for (List<String> row : regexFraming.data()) {
+				String regex = row.get(0);
+				List<String> framing = row.subList(1,row.size());
+				compounds( compounds, rawLine, regex, framing );
+			}
+			if (compounds.size()>0) {
+				table.append( compounds );
+				compounds = new ArrayList<>();
 			}
 		}
 		return table;
 	}
 	
 	public static String compound ( Matcher matcher, String[] framing ) throws Exception {
+		return compound( matcher, Arrays.asList( framing ) );
+	}
+
+	public static String compound ( Matcher matcher, List<String> framing ) throws Exception {
 		StringBuilder output = new StringBuilder();
-		for (int i=0; i<Math.max(framing.length, matcher.groupCount()); i++) {
-			if (framing!=null && framing.length>i) output.append(framing[i]);
+		for (int i=0; i<Math.max(framing.size(), matcher.groupCount()); i++) {
+			if (framing!=null && framing.size()>i) output.append(framing.get(i));
 			if (i+1<=matcher.groupCount()) output.append(matcher.group(i+1));
 		}
 		return output.toString();
 	}
 	
-	public static String replace ( String input, String regex, String[] framing ) throws Exception {
+	public static List<String> compounds ( String input, String regex, List<String> framing ) throws Exception {
+		return compounds( new ArrayList<>(), input, regex, framing );
+	}
+
+	public static List<String> compounds ( List<String> output, String input, String regex, List<String> framing ) throws Exception {
+		Matcher matcher = pattern(regex).matcher(input);
+		while (matcher.find()) {
+			if (output!=null) output.add( compound( matcher, framing ) );
+		}
+		//System.out.println( "compounds found for "+input+","+regex+","+framing+": "+compounds );
+		return output;
+	}
+	
+	public static String replace ( String input, String regex, List<String> framing ) throws Exception {
 		Matcher matcher = pattern(regex).matcher(input);
 		StringBuilder output = new StringBuilder();
 		int lastIndex = 0;
@@ -72,12 +99,18 @@ public class Regex {
 	// testing
 	public static void main ( String[] args ) throws Exception {
 		List<String> list = Arrays.asList(
-			new String[]{ "12ab,.-[34cd Hi Hello", "--ABC   DEF", "123\n456 789\n\n101112" }
+			new String[]{ "1: 12ab,.-[34cd Hi Hello", "2: -h-e-r-e-ABC   DEF", "other stuff 3: 123\n456 789\n\n101112" }
 		);
 		String regex = "(\\w+)\\W*(\\w+)";
-		String[] framing =  new String[]{ "(", "-", ")" };
+		List<String> framing =  Arrays.asList( new String[]{ "(", "-", ")" } );
+		Table regexTable = new CSV(
+			"(\\\\d):,, ->\\\n\n"+
+			"(\\\\w\\\\w+),(,)\n"
+		);
+		System.out.println( new SimpleTable(regexTable) );
 		
 		System.out.println( Regex.table( list, regex, framing, new SimpleTable() ) );
+		System.out.println( Regex.table( list, regexTable, new SimpleTable() ) );
 		System.out.println( Regex.replace( "12ab,.-[34cd Hi Hello -- 123\n456", regex, framing ) );
 	}
 	

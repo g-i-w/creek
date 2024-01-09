@@ -67,6 +67,7 @@ public class FileActions {
 	}
 
 	public static File write ( File file, byte[] bytes, boolean append ) throws Exception {
+		if (append && !file.exists()) file.createNewFile();
 		Files.write(
 			file.toPath(),
 			bytes,
@@ -92,37 +93,64 @@ public class FileActions {
 		return write( new File( path ), text.getBytes() );
 	}
 
-		
 
-	public static TableFile regexGroups ( File rawFile, TableFile tableFile, String regex ) throws Exception {
-		return tableFile.append(
-			Tables.regexGroups(
-				readLines( rawFile ),
-				regex
-			)
-		);
+	public static TableFile regex ( File fileOrDir, TableFile tableFile ) throws Exception {
+		return regex( fileOrDir, tableFile, "(\\w+)", null );
 	}
-	
-	
-	// Test methods
 
-	public static void test_addSuffix ( String args[] ) throws Exception {
-		File file = new File( args[0] );
-		for( File f : FileActions.recurse( file ) ) {
-			System.out.println( f = addSuffix( f, "_TEST_SUFFIX_" ) );
-			f.createNewFile();
+	public static TableFile regex ( File fileOrDir, TableFile tableFile, String regex, List<String> framing ) throws Exception {
+		for (File file : recurse(fileOrDir)) {
+			tableFile.append(
+				Regex.table(
+					readLines( file ),
+					regex,
+					framing,
+					new SimpleTable()
+				)
+			);
 		}
+		return tableFile;
 	}
 	
-	public static void test_regexGroups ( String args[] ) throws Exception {
-		System.out.println(
-			regexGroups( new File(args[0]), new CSVFile(args[1]), args[2] )
-		);
+	public static File findReplaceNewline ( File fileOrDir, File newFile, String regex ) throws Exception {
+		return findReplace( fileOrDir, newFile, regex, System.lineSeparator() );
 	}
 
-	public static void main ( String[] args ) throws Exception {
-		test_addSuffix( args );
-		test_regexGroups( args );
+	public static File findReplace ( File fileOrDir, File newFile, String regex, String replacement ) throws Exception {
+		for (File file : recurse(fileOrDir)) {
+			String replaced = read( file ).replaceAll( regex, replacement );
+			write( newFile, replaced.getBytes(), true );
+		}
+		return newFile;
 	}
 
 }
+
+class ExecAddSuffix {
+
+	public static void main ( String args[] ) throws Exception {
+		File file = new File( args[0] );
+		for( File f : FileActions.recurse( file ) ) {
+			System.out.println( f = FileActions.addSuffix( f, "_TEST_SUFFIX_" ) );
+			f.createNewFile();
+		}
+	}
+}
+
+class ExecRegex {
+
+	public static void main ( String args[] ) throws Exception {
+		List<String> framing = new ArrayList<>();
+		for (int i=3; i<args.length; i++) framing.add( args[i] );
+		
+		FileActions.regex( new File(args[0]), new CSVFile(args[1]), args[2], framing );
+	}
+}
+
+class ExecFindReplaceNewline {
+
+	public static void main ( String args[] ) throws Exception {
+		FileActions.findReplaceNewline( new File(args[0]), new File(args[1]), args[2] );
+	}
+}
+
