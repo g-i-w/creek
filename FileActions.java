@@ -96,8 +96,17 @@ public class FileActions {
 
 
 	public static Table regex ( String path ) throws Exception {
-		return Regex.table( read(path), "(\\w+)", new SimpleTable() );
+		return regex( path, "(\\w+)" );
 	}
+
+	public static Table regex ( String path, String regex ) throws Exception {
+		return regex( path, regex, new SimpleTable() );
+	}
+
+	public static Table regex ( String path, String regex, Table table ) throws Exception {
+		return Regex.table( readLines(path), regex, table );
+	}
+
 
 	public static TableFile regex ( File fileOrDir, TableFile tableFile ) throws Exception {
 		return regex( fileOrDir, tableFile, "(\\w+)", null );

@@ -66,14 +66,6 @@ public class Regex {
 	
 	////////// Table output methods //////////
 
-	// Each group becomes one row of table
-	
-	public static Table table ( String input, String regex, Table table ) throws Exception {
-		Matcher matcher = pattern( regex ).matcher( input );
-		while( matcher.find() ) table.append( groups( matcher ) );
-		return table;
-	}
-	
 	// Sum of all groups in each line become one row of table
 	
 	public static Table table ( List<String> input ) throws Exception {
