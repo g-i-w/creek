@@ -174,10 +174,17 @@ class ExecReplace {
 	}
 }
 
-class ExecReplaceNewline {
+class ExecReplaceWithNewline {
 
 	public static void main ( String[] args ) throws Exception {
-		FileActions.replace( new File(args[0]), new File(args[1]), args[2], "\n", true );
+		FileActions.replace( new File(args[0]), new File(args[1]), args[2], System.lineSeparator(), true );
+	}
+}
+
+class ExecReplaceNewlineWith {
+
+	public static void main ( String[] args ) throws Exception {
+		FileActions.replace( new File(args[0]), new File(args[1]), "[\r\n]+", args[2], true );
 	}
 }
 

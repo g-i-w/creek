@@ -66,7 +66,15 @@ public class Regex {
 	
 	////////// Table output methods //////////
 
-	// Sum of all groups in each line become one row of table
+	// Each group becomes one row of table
+	
+	public static Table table ( String input, String regex, Table table ) throws Exception {
+		Matcher matcher = pattern( regex ).matcher( input );
+		while( matcher.find() ) table.append( groups( matcher ) );
+		return table;
+	}
+	
+	// Collection of all groups in each line become one row of table
 	
 	public static Table table ( List<String> input ) throws Exception {
 		return table ( input, "(\\w+)" );
@@ -89,7 +97,7 @@ public class Regex {
 		return table;
 	}
 	
-	// All compounds (created using "framing") in each line become one row of table
+	// Collection of all compounds (created using "framing") in each line become one row of table
 	
 	public static Table table ( List<String> input, String regex, List<String> framing, Table table ) throws Exception {
 		for (String rawLine : input) {
