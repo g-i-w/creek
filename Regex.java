@@ -81,7 +81,7 @@ public class Regex {
 	}
 		
 	public static Table table ( List<String> input, String regex ) throws Exception {
-		return table ( input, regex, new CSV() );
+		return table ( input, regex, new SimpleTable() );
 	}
 	
 	public static Table table ( List<String> input, String regex, Table table ) throws Exception {
@@ -163,9 +163,9 @@ public class Regex {
 		System.out.println( "testing Regex.groups( List<String> output, Matcher matcher ):" );
 		for (String str : list) System.out.println( "group: "+Regex.groups( str, regex ) );
 		System.out.println();
-		System.out.println( "testing Regex.table( List<String> input, String regex, Table table ):" );
+		System.out.println( "testing Regex.table( List<String> input ):" );
 		System.out.println();
-		System.out.println( Regex.table( list, regex, new SimpleTable() ) );
+		System.out.println( Regex.table( list ) );
 		System.out.println( "testing Regex.table( List<String> input, Table regexFraming, Table table ):" );
 		System.out.println( "regex table:\n"+(new SimpleTable(regexTable)) );
 		System.out.println( Regex.table( list, regex, framing, new SimpleTable() ) );
