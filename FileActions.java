@@ -20,6 +20,7 @@ public class FileActions {
 				list.add( file );
 			}
 		}
+		Collections.sort(list);
 		return list;
 	}
 	
@@ -99,7 +100,12 @@ public class FileActions {
 	}
 
 	public static TableFile regex ( File fileOrDir, TableFile tableFile, String regex, List<String> framing ) throws Exception {
+		return regex( fileOrDir, tableFile, regex, framing, false );
+	}
+
+	public static TableFile regex ( File fileOrDir, TableFile tableFile, String regex, List<String> framing, boolean verbose ) throws Exception {
 		for (File file : recurse(fileOrDir)) {
+			if (verbose) System.out.println( "FileActions.regex: reading "+file.getAbsolutePath() );
 			tableFile.append(
 				Regex.table(
 					readLines( file ),
@@ -112,12 +118,13 @@ public class FileActions {
 		return tableFile;
 	}
 	
-	public static File findReplaceNewline ( File fileOrDir, File newFile, String regex ) throws Exception {
-		return findReplace( fileOrDir, newFile, regex, System.lineSeparator() );
+	public static File replace ( File fileOrDir, File newFile, String regex, String replacement ) throws Exception {
+		return replace( fileOrDir, newFile, regex, replacement, false );
 	}
 
-	public static File findReplace ( File fileOrDir, File newFile, String regex, String replacement ) throws Exception {
+	public static File replace ( File fileOrDir, File newFile, String regex, String replacement, boolean verbose ) throws Exception {
 		for (File file : recurse(fileOrDir)) {
+			if (verbose) System.out.println( "FileActions.replace: reading "+file.getAbsolutePath() );
 			String replaced = read( file ).replaceAll( regex, replacement );
 			write( newFile, replaced.getBytes(), true );
 		}
@@ -128,10 +135,10 @@ public class FileActions {
 
 class ExecAddSuffix {
 
-	public static void main ( String args[] ) throws Exception {
+	public static void main ( String[] args ) throws Exception {
 		File file = new File( args[0] );
 		for( File f : FileActions.recurse( file ) ) {
-			System.out.println( f = FileActions.addSuffix( f, "_TEST_SUFFIX_" ) );
+			System.out.println( f = FileActions.addSuffix( f, args[1] ) );
 			f.createNewFile();
 		}
 	}
@@ -139,18 +146,25 @@ class ExecAddSuffix {
 
 class ExecRegex {
 
-	public static void main ( String args[] ) throws Exception {
+	public static void main ( String[] args ) throws Exception {
 		List<String> framing = new ArrayList<>();
 		for (int i=3; i<args.length; i++) framing.add( args[i] );
 		
-		FileActions.regex( new File(args[0]), new CSVFile(args[1]), args[2], framing );
+		FileActions.regex( new File(args[0]), new CSVFile(args[1]), args[2], framing, true );
 	}
 }
 
-class ExecFindReplaceNewline {
+class ExecReplace {
 
-	public static void main ( String args[] ) throws Exception {
-		FileActions.findReplaceNewline( new File(args[0]), new File(args[1]), args[2] );
+	public static void main ( String[] args ) throws Exception {
+		FileActions.replace( new File(args[0]), new File(args[1]), args[2], args[3], true );
+	}
+}
+
+class ExecReplaceNewline {
+
+	public static void main ( String[] args ) throws Exception {
+		FileActions.replace( new File(args[0]), new File(args[1]), args[2], "\n", true );
 	}
 }
 
