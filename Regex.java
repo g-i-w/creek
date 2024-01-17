@@ -47,7 +47,8 @@ public class Regex {
 
 	public static String compound ( Matcher matcher, List<String> framing ) throws Exception {
 		StringBuilder output = new StringBuilder();
-		for (int i=0; i<Math.max(framing.size(), matcher.groupCount()); i++) {
+		int ceiling = ( framing!=null ? Math.max(framing.size(), matcher.groupCount()) : matcher.groupCount() );
+		for (int i=0; i<ceiling; i++) {
 			if (framing!=null && framing.size()>i) output.append(framing.get(i));
 			if (i+1<=matcher.groupCount()) output.append(matcher.group(i+1));
 		}
