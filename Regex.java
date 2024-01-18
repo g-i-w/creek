@@ -146,7 +146,7 @@ public class Regex {
 	
 	////////// Exists //////////
 
-	public static boolean exists ( String line, String regex ) throws Exception {
+	public static boolean exists ( String line, String regex ) {
 		return pattern( regex ).matcher( line ).find();
 	}
 	

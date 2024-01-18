@@ -7,6 +7,28 @@ import java.nio.charset.*;
 
 public class FileActions {
 
+	public static File pwd () {
+		return new File( System.getProperty("user.dir") );
+	}
+
+	public static boolean exists ( String path ) {
+		if (path==null) return false;
+		return exists( new File(path), null );
+	}
+	
+	public static boolean exists ( String[] path ) {
+		return exists( null, path );
+	}
+
+	public static boolean exists ( File base, String[] path ) {
+		if (base==null) base = pwd();
+		if (path==null) return base.exists();
+		StringBuilder fullPath = new StringBuilder();
+		fullPath.append( base.getAbsolutePath() );
+		for (String level : path) fullPath.append( File.separator ).append( level );
+		return exists( fullPath.toString() );
+	}
+
 	public static List<File> recurse ( String path ) {
 		return recurse( new File(path) );
 	}
@@ -16,6 +38,7 @@ public class FileActions {
 	}
 
 	public static List<File> recurse ( File file, List<File> list ) {
+		if (file == null || !file.exists()) return new ArrayList<File>();
 		if (file.getName().indexOf(".")!=0) {
 			if (file.isDirectory()) {
 				for (File f : file.listFiles()) recurse( f, list );
@@ -32,7 +55,7 @@ public class FileActions {
 	}
 	
 	public static File auto ( String[] path, byte[] data ) throws Exception {
-		return auto( new File( System.getProperty("user.dir") ), path, data );
+		return auto( pwd(), path, data );
 	}
 	
 	public static File auto ( File file, String[] path, byte[] data ) throws Exception {
