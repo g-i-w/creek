@@ -10,37 +10,47 @@ public abstract class AbstractTree implements Tree {
 	private Map<String,Tree> map;
 	private int integerKey;
 	
-	private String integerKey () {
-		String key;
-		while (map.containsKey(key=String.valueOf(integerKey))) integerKey++;
-		return key;
-	}
-	
 	private void indent ( StringBuilder sb, int length ) {
 		for (int i=0; i<length; i++) sb.append( "\t" );
 	}
 	
 	private void serialize ( Tree branch, StringBuilder json, int i ) {
-		json.append( "{\n" );
+		boolean integerKeys = branch.integerKeys();
+		if (integerKeys) json.append("[");
+		else json.append("{");
+		String comma = "";
 		for (Map.Entry<String,Tree> entry : branch.map().entrySet()) {
+			json.append(comma).append("\n");
 			indent( json, i+1 );
-			json.append("\"").append( entry.getKey() ).append( "\": " );
+			if (! integerKeys) json.append("\"").append( entry.getKey() ).append("\": ");
 			Tree subBranch = entry.getValue();
 			if (subBranch.size()==0) {
-				json.append("\"").append( subBranch.value() ).append("\"\n");
+				String value = subBranch.value();
+				if (value==null) json.append("null");
+				else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d\\.]" )) json.append( value );
+				else json.append("\"").append( value ).append("\"");
 			} else {
 				serialize( subBranch, json, i+1 );
 			}
+			comma = ",";
 		}
+		json.append("\n");
 		indent( json, i );
-		json.append( "}\n" );
+		if (integerKeys) json.append("]");
+		else json.append("}");
+	}
+	
+	public String serialize () {
+		StringBuilder json = new StringBuilder();
+		serialize( this, json, 0 );
+		return json.toString();
 	}
 	
 	// Abstract
 	
 	public abstract Tree create ();
 	
-	public abstract Tree deserialize ( String serial );
+	public abstract Tree deserialize ( String serial ) throws Exception;
 
 	
 	// Public
@@ -148,14 +158,16 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	public boolean integerKeys () {
-		for (String key : keys()) if (Regex.exists( key, "\\D" )) return false; // if non-digit char
+		for (String key : keys()) {
+			if (key==null || key.equals("") || Regex.exists( key, "\\D+" )) return false; // if non-digit char
+		}
 		return true;
 	}
 	
-	public String serialize () {
-		StringBuilder json = new StringBuilder();
-		serialize( this, json, 0 );
-		return json.toString();
+	public String integerKey () {
+		String key;
+		while (map().containsKey(key=String.valueOf(integerKey))) integerKey++;
+		return key;
 	}
 	
 	public String toString () {
@@ -180,11 +192,11 @@ class TestAbstractTree extends AbstractTree {
 		List<String> path0 = Arrays.asList( new String[]{ "level0", "level1", "level2" } );
 		List<String> path1 = Arrays.asList( new String[]{ "a0", "b1" } );
 		
-		tree.auto( path0 ).add( "key0", "value0" ).add( "key1", "value1" );
-		tree.auto( "level0" ).add( "a" ).add( "b" ).auto( path1 );
+		tree.auto( path0 ).add( "0", "this is something" ).add( "1", "true" ).add( "2", "1.001" ).add( "3", "2" );
+		tree.auto( "level0" ).add( "a" ).add( "2.002" ).auto( path1 );
 
-		System.out.println( tree );
-		System.out.println( tree.serialize() );
+		System.out.println( "toString:\n"+tree );
+		System.out.println( "serialize:\n"+tree.serialize() );
 	}
 
 }

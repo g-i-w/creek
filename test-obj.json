@@ -1,0 +1,12 @@
+{
+	"key0": "value0",
+	"key1": [
+			"item0",
+			"item1",
+			"item2"
+		],
+	"key2": {
+		"subkey0": 0,
+		"subkey1": true
+	}
+}

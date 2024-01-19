@@ -32,8 +32,9 @@ public interface Tree {
 	public int size ();
 	
 	public boolean integerKeys ();
+	public String integerKey();
 	
 	public String serialize ();
-	public Tree deserialize ( String serial );
+	public Tree deserialize ( String serial ) throws Exception;
 	
 }
