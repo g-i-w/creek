@@ -34,7 +34,18 @@ public interface Tree {
 	public boolean integerKeys ();
 	public String integerKey();
 	
+	// I/O
 	public String serialize ();
 	public Tree deserialize ( String serial ) throws Exception;
+	
+	// Flattening
+	public Set<Set<Tree>> routes ();
+	public void routes ( Set<Set<Tree>> allRoutes, Set<Tree> startingPoint );
+	
+	public List<List<String>> paths ();
+	public void paths ( List<List<String>> allPaths, List<String> startingPoint );
+	
+	// data
+	public Tree data ( List<List<String>> data );
 	
 }
