@@ -9,7 +9,7 @@ public class JSON extends AbstractTree {
 	private static final int FIND_KEY = 1;
 	private static final int KEY = 2;
 	private static final int KEY_DELIM = 3;
-	private static final int OBJECT = 4;
+	private static final int VALUE = 4;
 	private static final int STRING = 5;
 	private static final int STRING_NONQUOTE = 6;
 	private static final int STRING_ESCAPE = 7;
@@ -19,30 +19,39 @@ public class JSON extends AbstractTree {
 		"FIND_KEY",
 		"KEY",
 		"KEY_DELIM",
-		"OBJECT",
+		"VALUE",
 		"STRING",
 		"STRING_NONQUOTE",
 		"STRING_ESCAPE"
 	};
+	
+	private static final boolean OBJECT_MODE = true;
+	private static final boolean ARRAY_MODE = false;
 
 
 	private List<String> keys = new ArrayList<>();
 	private List<Boolean> modes = new ArrayList<Boolean>();
-	private StringBuilder currentKey = null;
-	private StringBuilder currentValue = null;
+	private StringBuilder keyUnderConstruction = null;
+	private StringBuilder valueUnderConstruction = null;
 	private int charCount;
 	private int lineCount;
-	private boolean strict;
+	private int strictness; // 0: as relaxed as possible, 1: just essentials, 2: very rigorous, 3: overly pedantic
 	private boolean printDebug;
+	private boolean trailingComma = false;
 
 	
-	public JSON ( boolean strict, boolean printDebug ) {
-		this.strict = strict;
+	public JSON ( int strictness, boolean printDebug ) {
+		this.strictness = strictness;
 		this.printDebug = printDebug;
 	}
 	
+	public JSON ( String serial ) throws Exception {
+		this( 0, false );
+		deserialize( serial );
+	}
+
 	public JSON () {
-		this( true, false );
+		this( 0, false );
 	}
 
 	public Tree create () {
@@ -50,60 +59,78 @@ public class JSON extends AbstractTree {
 	}
 	
 	
-	private boolean objectMode () {
-		if (modes.size()==0) return true;
+	private boolean currentMode () {
 		return modes.get(modes.size()-1).booleanValue();
 	}
 		
-	private Tree currentBranch () {
-		return auto(keys);
+	private void currentMode ( boolean mode ) {
+		modes.add( mode );
 	}
+	
+		
+	private Tree currentBranch () {
+		if (keys.size()<1) return this;
+		return auto(keys.subList(1,keys.size()));
+	}
+	
 
-	private void throwException ( String message ) throws Exception {
-		if (printDebug) System.out.println( serialize() );
-		if (strict) throw new Exception( message );
+	private void throwException ( int seriousness, String message ) throws Exception {
+		if (seriousness > strictness) {
+			if (printDebug) System.out.println( serialize() );
+			throw new Exception( message );
+		}
 	}
 
 	private boolean isWord ( char c ) {
 		return (c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c=='.';
 	}
 	
-	private boolean isSpaceOrComma ( char c ) {
-		return (c==' ' || c=='\t' || c=='\r' || c=='\n' || c==',');
+	private boolean isSpace ( char c ) {
+		return (c==' ' || c=='\t' || c=='\r' || c=='\n');
 	}
 	
-	private void levelUp ( boolean mode ) {
-		keys.add( currentKey.toString() );
-		modes.add( mode );
-		if (printDebug) System.out.println( "pushed: "+keys+modes );
-		currentKey = null;
+	private boolean isComma ( char c ) {
+		return (c==',');
 	}
 	
-	private void levelDown () throws Exception {
-		if (keys.size()==0) return;
+	private void pushObjectKey () {
+		if (keyUnderConstruction == null) keys.add( null );
+		else {
+			keys.add( keyUnderConstruction.toString() );
+			keyUnderConstruction = null;
+		}
+	}
+	
+	private void pushArrayKey () {
+		keys.add( currentBranch().integerKey() );
+		keyUnderConstruction = null;
+	}
+	
+	private void popKey () throws Exception {
+		//if (keys.size()==0) return;
 		//if (keys.size()==0) throwException( "more closing '}' than opening '{' at "+charLocation() );
 		keys.remove( keys.size()-1 );
 		modes.remove( modes.size()-1 );
 	}
 		
 	private void newValue () {
-		if (currentKey==null) currentKey = new StringBuilder( currentBranch().integerKey() );
-		currentBranch().add( currentKey.toString(), currentValue.toString() );
-		if (printDebug) System.out.println( "updated value: "+this );
-		currentValue = null;
-		currentKey = null;
+		if (currentMode()==OBJECT_MODE) currentBranch().add( keyUnderConstruction.toString(), valueUnderConstruction.toString() );
+		else currentBranch().add( valueUnderConstruction.toString() );
+		
+		valueUnderConstruction = null;
+		keyUnderConstruction = null;
 	}
 	
 	private void initKey () {
-		currentKey = new StringBuilder();
+		keyUnderConstruction = new StringBuilder();
 	}
 	
 	private void initValue () {
-		currentValue = new StringBuilder();
+		valueUnderConstruction = new StringBuilder();
 	}
 	
 	private String objectHierarchy () {
-		return "\""+String.join(".",keys)+(currentKey==null ? "" : "."+currentKey)+"\"";
+		return "\""+String.join(".",keys)+(keyUnderConstruction==null ? "" : "."+keyUnderConstruction)+"\"";
 	}
 	
 	private String charLocation () {
@@ -113,64 +140,61 @@ public class JSON extends AbstractTree {
 	public Tree deserialize ( String serial ) throws Exception {
 		charCount = 0;
 		lineCount = 1;
-		int state = INIT;
+		int state = VALUE;
+		//currentMode( OBJECT_MODE );
 		
 		for (Character c : serial.toCharArray()) {
 			if (printDebug) System.out.print( c+": "+reverse_state[state]+" -> " );
 
-			if (state == INIT) {
-				if (c == '"') {
-					state = KEY;
-					initKey();
-				} else if (c == '}') {
-					// throw exception for empty data set
-				}
-				
-			} else if (state == FIND_KEY) {
+			if (state == FIND_KEY) {
 				if (c == '"') {
 					initKey();
 					state = KEY;
 				} else if (c == '}') {
-					levelDown();
-					if (objectMode()) state = FIND_KEY; // object mode
+					popKey();
+					if (modes.size()>0 && currentMode()==ARRAY_MODE) state = VALUE;
 				}
 				
 			} else if (state == KEY) {
 				if (c == '"') {
 					state = KEY_DELIM;
 				} else {
-					currentKey.append(c);
+					keyUnderConstruction.append(c);
 				}
 
 			} else if (state == KEY_DELIM) {
 				if (c == ':') {
-					state = OBJECT;
+					state = VALUE;
+				} else if (c != ' ') {
+					throwException( 3, "non-space character '"+c+"' found before colon at "+charLocation() );
 				}
 
-			} else if (state == OBJECT) {
-				if (currentKey==null) {
-					// throw exception
-				}
-				
+			} else if (state == VALUE) {
 				if (c == '{') {
-					levelUp( true );
-					initKey();
+					if (modes.size()>0 && currentMode()==ARRAY_MODE) pushArrayKey();
+					else pushObjectKey();
+					modes.add( OBJECT_MODE );
+					keyUnderConstruction = null;
 					state = FIND_KEY;
 				} else if (c == '[') {
-					levelUp( false );
+					if (modes.size()==0) throwException( 1, "JSON spec does not allow arrays at the root level ("+charLocation()+")" );
+					if (modes.size()>0 && currentMode()==OBJECT_MODE) pushObjectKey();
+					else  pushArrayKey();
+					modes.add( ARRAY_MODE );
+					keyUnderConstruction = null;
+					//keyUnderConstruction = new StringBuilder( currentBranch().integerKey() );
 					// no initKey for arrays
 				} else if (c == '"') {
+					if (modes.size()==0) throwException( 1, "JSON spec does not allow key instantiation at the root level ("+charLocation()+")" );
 					initValue();
 					state = STRING;
 				} else if (isWord(c)) {
-					state = STRING_NONQUOTE;
 					initValue();
-					currentValue.append(c);
+					valueUnderConstruction.append(c);
+					state = STRING_NONQUOTE;
 				} else if (c == ']') {
-					levelDown();
-					if (objectMode()) state = FIND_KEY; // object mode
-				} else if (c == '}') {
-					// throw exception, } should be found in FIND_KEY
+					popKey();
+					if (modes.size()>0 && currentMode()) state = FIND_KEY; // object mode
 				}
 
 			} else if (state == STRING) {
@@ -178,32 +202,37 @@ public class JSON extends AbstractTree {
 					state = STRING_ESCAPE;
 				} else if (c == '"') {
 					newValue();
-					if (objectMode()) state = FIND_KEY; // object mode
-					else state = OBJECT; // array mode
+					if (currentMode()==OBJECT_MODE) state = FIND_KEY;
+					else state = VALUE; // array mode
 				} else {
-					currentValue.append(c);
+					valueUnderConstruction.append(c);
 				}
 
 			} else if (state == STRING_NONQUOTE) {
 				if (c == '\\') {
 					state = STRING_ESCAPE;
-				} else if (isSpaceOrComma(c)) {
+				} else if (isSpace(c) || isComma(c)) {
 					newValue();
-					if (objectMode()) state = FIND_KEY; // object mode
-					else state = OBJECT; // array mode
+					if (currentMode()==OBJECT_MODE) state = FIND_KEY;
+					else state = VALUE; // array mode
 				/*} else if (! isWord(c)) {
-					throwException( "found '"+c+"' in non-quoted value ("+currentValue+") to be added to "+objectHierarchy()+" at "+charLocation() );
+					throwException( "found '"+c+"' in non-quoted value ("+valueUnderConstruction+") to be added to "+objectHierarchy()+" at "+charLocation() );
 				*/
+				} else if (c == ']' || c == '}') {
+					newValue();
+					popKey();
+					if (currentMode()==OBJECT_MODE) state = FIND_KEY;
+					else state = VALUE; // array mode
 				} else {
-					currentValue.append(c);
+					valueUnderConstruction.append(c);
 				}
 
 			} else if (state == STRING_ESCAPE) {
-				currentValue.append(c);
+				valueUnderConstruction.append(c);
 				state = STRING;
 			}
 			
-			if (printDebug) System.out.println( reverse_state[state]+" "+this+" "+objectMode()+" "+currentKey+" "+currentValue );
+			if (printDebug) System.out.println( reverse_state[state]+" str="+this+" keys="+keys+" modes="+modes+" key="+keyUnderConstruction+" val="+valueUnderConstruction+" comma="+trailingComma );
 			charCount++;
 			if (c=='\n') {
 				lineCount++;
@@ -212,14 +241,49 @@ public class JSON extends AbstractTree {
 		}
 		
 		if (keys.size()!=0) {
-			System.out.println( keys );
-			throwException( "more opening '{' than closing '}' after end of stream at "+charLocation() );
+			throwException( 2, "more opening '{' than closing '}' after end of stream at "+charLocation() );
 		}
 		return this;
 	}
 	
+	private void indent ( StringBuilder sb, int length ) {
+		for (int i=0; i<length; i++) sb.append( "\t" );
+	}
+	
+	private void serialize ( Tree branch, StringBuilder json, int i ) {
+		boolean integerKeys = branch.integerKeys();
+		if (integerKeys) json.append("[");
+		else json.append("{");
+		String comma = "";
+		for (Map.Entry<String,Tree> entry : branch.map().entrySet()) {
+			json.append(comma).append("\n");
+			indent( json, i+1 );
+			if (! integerKeys) json.append("\"").append( entry.getKey() ).append("\": ");
+			Tree subBranch = entry.getValue();
+			if (subBranch.size()==0) {
+				String value = subBranch.value().replace( "\\", "\\\\" ).replace( "\"", "\\\"" );
+				if (value==null) json.append("null");
+				else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d\\.]" )) json.append( value );
+				else json.append("\"").append( value ).append("\"");
+			} else {
+				serialize( subBranch, json, i+1 );
+			}
+			comma = ",";
+		}
+		json.append("\n");
+		indent( json, i );
+		if (integerKeys) json.append("]");
+		else json.append("}");
+	}
+	
+	public String serialize () {
+		StringBuilder json = new StringBuilder();
+		serialize( this, json, 0 );
+		return json.toString();
+	}
+	
 	public static void main ( String[] args ) throws Exception {
-		Tree json = new JSON( true, ( args.length>1 ? Boolean.valueOf(args[1]) : false ) );
+		Tree json = new JSON( Integer.parseInt(args[2]), ( args.length>1 ? Boolean.valueOf(args[1]) : false ) );
 		
 		String input = FileActions.read(args[0]);
 		System.out.println( input );

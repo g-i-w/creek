@@ -10,42 +10,6 @@ public abstract class AbstractTree implements Tree {
 	private Map<String,Tree> map;
 	private int integerKey;
 	
-	private void indent ( StringBuilder sb, int length ) {
-		for (int i=0; i<length; i++) sb.append( "\t" );
-	}
-	
-	private void serialize ( Tree branch, StringBuilder json, int i ) {
-		boolean integerKeys = branch.integerKeys();
-		if (integerKeys) json.append("[");
-		else json.append("{");
-		String comma = "";
-		for (Map.Entry<String,Tree> entry : branch.map().entrySet()) {
-			json.append(comma).append("\n");
-			indent( json, i+1 );
-			if (! integerKeys) json.append("\"").append( entry.getKey() ).append("\": ");
-			Tree subBranch = entry.getValue();
-			if (subBranch.size()==0) {
-				String value = subBranch.value();
-				if (value==null) json.append("null");
-				else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d\\.]" )) json.append( value );
-				else json.append("\"").append( value ).append("\"");
-			} else {
-				serialize( subBranch, json, i+1 );
-			}
-			comma = ",";
-		}
-		json.append("\n");
-		indent( json, i );
-		if (integerKeys) json.append("]");
-		else json.append("}");
-	}
-	
-	public String serialize () {
-		StringBuilder json = new StringBuilder();
-		serialize( this, json, 0 );
-		return json.toString();
-	}
-	
 	// Abstract
 	
 	public abstract Tree create ();
@@ -174,6 +138,10 @@ public abstract class AbstractTree implements Tree {
 		return ( map().size()>0 ? map().toString() : value() );
 	}
 
+	public String serialize () {
+		return toString();
+	}
+	
 }
 
 class TestAbstractTree extends AbstractTree {
