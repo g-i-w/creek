@@ -35,7 +35,7 @@ public class JSON extends AbstractTree {
 	private StringBuilder valueUnderConstruction = null;
 	private int charCount;
 	private int lineCount;
-	private int strictness; // 0: as relaxed as possible, 1: just essentials, 2: very rigorous, 3: overly pedantic
+	private int strictness; // 3: as relaxed as possible, 2: just essentials, 1: rigorous, 0: overly pedantic
 	private boolean printDebug;
 	private boolean trailingComma = false;
 
@@ -46,12 +46,12 @@ public class JSON extends AbstractTree {
 	}
 	
 	public JSON ( String serial ) throws Exception {
-		this( 0, false );
+		this( 3, false );
 		deserialize( serial );
 	}
 
 	public JSON () {
-		this( 0, false );
+		this( 3, false );
 	}
 
 	public Tree create () {
