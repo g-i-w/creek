@@ -136,7 +136,7 @@ public class FileActions {
 	}
 
 	public static File write ( File file, byte[] bytes, boolean append ) throws Exception {
-		if (append && !file.exists()) file.createNewFile();
+		if (!file.exists()) file.createNewFile();
 		Files.write(
 			file.toPath(),
 			bytes,
@@ -233,6 +233,12 @@ public class FileActions {
 		}
 		return newFile;
 	}
+	
+	public static File replace ( File file, File newFile, String regex, List<String> framing, String subOld, String subNew ) throws Exception {
+		String input = read( file );
+		String output = Regex.replace( input, regex, framing, subOld, subNew );
+		return write( newFile, output.getBytes() );
+	}
 
 }
 
@@ -279,6 +285,14 @@ class ExecRegex {
 	}
 }
 
+class ExecRegexReplace {
+	// <oldFile> <newFile> <regexFile> <subOld> <subNew>
+	public static void main ( String[] args ) throws Exception {
+		String regex = FileActions.read( args[2] );
+		FileActions.replace( new File(args[0]), new File(args[1]), regex, null, args[3], args[4] );
+	}
+}
+
 class ExecRegexBlob {
 
 	public static void main ( String[] args ) throws Exception {
@@ -305,6 +319,24 @@ class ExecReplaceNewlineWith {
 
 	public static void main ( String[] args ) throws Exception {
 		FileActions.replace( new File(args[0]), new File(args[1]), "[\r\n]+", args[2], true );
+	}
+}
+
+class ExecSubstring {
+
+	public static void main ( String[] args ) throws Exception {
+		String input = FileActions.read(args[0]);
+		String output = input.substring( Integer.parseInt(args[2]), Integer.parseInt(args[3]) );
+		FileActions.write( args[1], output );
+	}
+}
+
+class ExecSubstringFind {
+
+	public static void main ( String[] args ) throws Exception {
+		String input = FileActions.read(args[0]);
+		String output = input.substring( input.indexOf(args[2]), input.indexOf(args[3]) );
+		FileActions.write( args[1], output );
 	}
 }
 

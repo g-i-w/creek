@@ -131,13 +131,21 @@ public class Regex {
 	////////// Replace //////////
 
 	public static String replace ( String input, String regex, List<String> framing ) throws Exception {
+		return replace( input, regex, framing, null, null );
+	}
+	
+	public static String replace ( String input, String regex, List<String> framing, String subOld, String subNew ) throws Exception {
 		Matcher matcher = pattern(regex).matcher(input);
 		StringBuilder output = new StringBuilder();
 		int lastIndex = 0;
 		while (matcher.find()) {
+			String compound = compound( matcher, framing );
+			//System.out.print( compound+" --> " );
+			if (subOld!=null & subNew!=null) compound = compound.replaceAll( subOld, subNew );
+			//System.out.println( compound );
 			output
 				.append( input, lastIndex, matcher.start() )
-				.append( compound( matcher, framing ) )
+				.append( compound )
 			;
 			lastIndex = matcher.end();
 		}

@@ -4,10 +4,13 @@ import java.util.*;
 
 public abstract class AbstractTree implements Tree {
 
+	// Friendly
+	
+	Map<String,Tree> map;
+
 	// Private
 	
 	private String value;
-	private Map<String,Tree> map;
 	private int integerKey;
 	
 	// Abstract
@@ -29,7 +32,7 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	public Map<String,Tree> map () {
-		if (map==null) map = new TreeMap<>();
+		if (map==null) map = new LinkedHashMap<>();
 		return map;
 	}
 	
@@ -40,7 +43,7 @@ public abstract class AbstractTree implements Tree {
 	
 	// Array style entry
 	public Tree add ( List<String> values ) {
-		for (String value : values) add( value );
+		if (values!=null) for (String value : values) add( value );
 		return this;
 	}
 	
@@ -59,8 +62,8 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	// Map or Object style entry
-	public Tree add ( Map<String,String> map ) {
-		for (Map.Entry<String,String> entry : map.entrySet()) add( entry.getKey(), entry.getValue() );
+	public Tree add ( Map<String,String> m ) {
+		if (m!=null) for (Map.Entry<String,String> entry : m.entrySet()) add( entry.getKey(), entry.getValue() );
 		return this;
 	}
 	
@@ -136,8 +139,10 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	public boolean integerKeys () {
+		int i = 0;
 		for (String key : keys()) {
 			if (key==null || key.equals("") || Regex.exists( key, "\\D+" )) return false; // if non-digit char
+			if (Integer.parseInt(key) != i++) return false; // must be consecutive from 0
 		}
 		return true;
 	}
@@ -185,7 +190,7 @@ public abstract class AbstractTree implements Tree {
 	
 	public void paths ( List<List<String>> paths, List<String> previousKeys ) {
 		boolean isLeaf = true;  // may be disproved
-		for (Map.Entry<String,Tree> entry : map.entrySet()) {
+		for (Map.Entry<String,Tree> entry : map().entrySet()) {
 			isLeaf = false; // further keys exist
 			List<String> futureKeys = new ArrayList<String>( previousKeys );
 			futureKeys.add( entry.getKey() );

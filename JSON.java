@@ -16,6 +16,7 @@ public class JSON extends AbstractTree {
 	private static final int STRING = 8;
 	private static final int STRING_NONQUOTE = 9;
 	private static final int STRING_ESCAPE = 10;
+	private static final int CHECK_FOR_UNESCAPED_QUOTE = 11;
 	private static final String[] reverse_state = {
 		"INIT",
 		"FIND_KEY",
@@ -27,7 +28,8 @@ public class JSON extends AbstractTree {
 		"VALUE_COMMENT",
 		"STRING",
 		"STRING_NONQUOTE",
-		"STRING_ESCAPE"
+		"STRING_ESCAPE",
+		"CHECK_FOR_UNESCAPED_QUOTE"
 	};
 
 	// used by FSM
@@ -37,9 +39,10 @@ public class JSON extends AbstractTree {
 	private List<String> keys = new ArrayList<>();
 	private StringBuilder keyUnderConstruction = null;
 	private StringBuilder valueUnderConstruction = null;
+	private String currentSerial = null;
 	private int charCount;
 	private int lineCount;
-	private boolean printDebug;
+	private int absoluteCount;
 	private boolean trailingComma = false;
 
 	// Leniency:
@@ -62,32 +65,70 @@ public class JSON extends AbstractTree {
 		"CAUTION"
 	};
 	
+	// 0: no sorting, 1: maintain original sort order, 2: auto-sort
+	private int sortMode;
+	
+	// automatically recognize arrays by consecutive integers starting at 0
+	private boolean printArrays;
+	
+	// print degug state-change information
+	private boolean printDebug;
+
+	// allow for unescaped embedded quotes by instead using [ non-space_and_non-ctrl .. comma_or_ctrl ] to deliniate string values
+	private boolean unescapedQuotes;
+	
 	// normal constructors
 	
-	public JSON ( int leniency, boolean printDebug ) {
+	public JSON ( int leniency, int sortMode, boolean printArrays, boolean printDebug, boolean unescapedQuotes ) {
 		this.leniency = leniency;
+		this.sortMode = sortMode;
+		this.printArrays = printArrays;
 		this.printDebug = printDebug;
+		this.unescapedQuotes = unescapedQuotes;
+	}
+	
+	public JSON ( int leniency, int sortMode ) {
+		this( leniency, sortMode, true, false, false );
+	}
+	
+	public JSON ( int leniency ) {
+		this( leniency, 2, true, false, false );
 	}
 	
 	public JSON () {
-		this( RELAXED, false );
+		this( RELAXED, 2, true, false, false );
 	}
 
 	public Tree create () {
-		return new JSON();
+		return new JSON( leniency, sortMode, printArrays, printDebug, unescapedQuotes );
 	}
 	
 	// constructors that can throw Exception
 
-	public JSON ( String serial, int leniency, boolean printDebug ) throws Exception {
-		this( leniency, printDebug );
+	public JSON ( String serial, int leniency, int sortMode ) throws Exception {
+		this( leniency, sortMode, true, false, false );
 		deserialize( serial );
 	}
 	
-	public JSON ( String serial ) throws Exception {
-		this( serial, RELAXED, false );
-	}	
+	public JSON ( String serial, int leniency ) throws Exception {
+		this( serial, leniency, 2 );
+	}
 	
+	public JSON ( String serial ) throws Exception {
+		this( serial, RELAXED, 2 );
+	}
+	
+	////////// map( ) //////////
+	
+	public Map<String,Tree> map () {
+		if (map==null) {
+			if      (sortMode == 0) map = new HashMap<>();
+			else if (sortMode == 1) map = new LinkedHashMap<>();
+			else                    map = new TreeMap<>();
+		}
+		return map;
+	}
+
 	////////// deserialize( ) //////////
 	
 	private boolean currentMode () {
@@ -102,8 +143,33 @@ public class JSON extends AbstractTree {
 	private void throwException ( int seriousness, String message ) throws Exception {
 		if (seriousness > leniency) {
 			if (printDebug) System.err.println( serialize() );
+			System.err.println( stackState() );
+			System.err.println( surroundingText( 100 ) );
 			throw new Exception( reverse_seriousness[seriousness]+": "+message );
 		}
+	}
+	
+	private String charLocation () {
+		return "line "+lineCount+" character "+charCount+" (index "+absoluteCount+" of length "+currentSerial.length()+")";
+	}
+	
+	private String stackState () {
+		return "keys="+keys+" modes="+modes+" key="+keyUnderConstruction+" val="+valueUnderConstruction+" comma="+trailingComma;
+	}
+	
+	private String currentSubString ( int start, int end ) {
+		if (end > currentSerial.length()) end = currentSerial.length();
+		if (start > end-1) start = end-1;
+		if (start >= 0) return currentSerial.substring( start, end );
+		return "";
+	}
+	
+	private String surroundingText ( int length ) throws Exception {
+		return
+			currentSubString( absoluteCount-length, absoluteCount )+
+			">>>"+currentSubString( absoluteCount, absoluteCount+1 )+"<<<"+
+			currentSubString( absoluteCount+1, currentSerial.length() )
+		;
 	}
 
 	private boolean isWord ( char c ) {
@@ -157,20 +223,19 @@ public class JSON extends AbstractTree {
 		valueUnderConstruction = new StringBuilder();
 	}
 	
-	private String charLocation () {
-		return "line "+lineCount+" character "+charCount;
-	}
-	
 	// FSM
 
 	public Tree deserialize ( String serial ) throws Exception {
+		currentSerial = serial;
 		charCount = 1;
 		lineCount = 1;
+		absoluteCount = 0;
 		int state = VALUE;
 		//currentMode( OBJECT_MODE );
 		
 		for (Character c : serial.toCharArray()) {
-			if (printDebug) System.out.print( c+": "+reverse_state[state]+" -> " );
+		
+			if (printDebug) System.err.print( c+": "+reverse_state[state]+" -> " );
 
 			if (state == FIND_KEY) {
 				if (c == '"') {
@@ -265,10 +330,14 @@ public class JSON extends AbstractTree {
 				if (c == '\\') {
 					state = STRING_ESCAPE;
 				} else if (c == '"') {
-					trailingComma = false;
-					newValue();
-					if (currentMode()==OBJECT_MODE) state = FIND_KEY;
-					else state = VALUE; // array mode
+					if (unescapedQuotes) {
+						state = CHECK_FOR_UNESCAPED_QUOTE;
+					} else {
+						trailingComma = false;
+						newValue();
+						if (currentMode()==OBJECT_MODE) state = FIND_KEY;
+						else state = VALUE; // array mode
+					}
 				} else {
 					valueUnderConstruction.append(c);
 				}
@@ -295,9 +364,24 @@ public class JSON extends AbstractTree {
 			} else if (state == STRING_ESCAPE) {
 				valueUnderConstruction.append(c);
 				state = STRING;
+			} else if (state == CHECK_FOR_UNESCAPED_QUOTE) {
+				if (c == ',' || c == '\n' || c == '\r' || c == '}' || c == ']') {
+					if (c != ',') trailingComma = false;
+					newValue();
+					if (currentMode()==OBJECT_MODE) state = FIND_KEY;
+					else state = VALUE; // array mode
+				} else if (c == '\\') {
+					valueUnderConstruction.append('"');
+					state = STRING_ESCAPE;
+				} else {
+					valueUnderConstruction.append('"');
+					valueUnderConstruction.append(c);
+					state = STRING;
+				}
 			}
 			
-			if (printDebug) System.out.println( reverse_state[state]+" str="+this+" keys="+keys+" modes="+modes+" key="+keyUnderConstruction+" val="+valueUnderConstruction+" comma="+trailingComma );
+			if (printDebug) System.err.println( reverse_state[state]+" "+stackState() );
+			absoluteCount++;
 			charCount++;
 			if (c=='\n') {
 				lineCount++;
@@ -308,6 +392,7 @@ public class JSON extends AbstractTree {
 		if (keys.size()!=0) {
 			throwException( NOTE, "found more openings ('{' or '[') than closings ('}' or ']') after end of stream at "+charLocation() );
 		}
+		currentSerial = null;
 		return this;
 	}
 	
@@ -319,20 +404,26 @@ public class JSON extends AbstractTree {
 	}
 	
 	private void serialize ( Tree branch, StringBuilder json, int i ) {
-		boolean integerKeys = branch.integerKeys();
-		if (integerKeys) json.append("[");
+		boolean isArray = (branch.integerKeys() && printArrays);
+		if (isArray) json.append("[");
 		else json.append("{");
 		String comma = "";
 		for (Map.Entry<String,Tree> entry : branch.map().entrySet()) {
 			json.append(comma).append("\n");
 			indent( json, i+1 );
-			if (! integerKeys) json.append("\"").append( entry.getKey() ).append("\": ");
+			if (! isArray) json.append("\"").append( entry.getKey() ).append("\": ");
 			Tree subBranch = entry.getValue();
 			if (subBranch.size()==0) {
-				String value = subBranch.value().replace( "\\", "\\\\" ).replace( "\"", "\\\"" );
-				if (value==null) json.append("null");
-				else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d\\.]" )) json.append( value );
-				else json.append("\"").append( value ).append("\"");
+				String value = subBranch.value();
+				if (value==null) {
+					json.append("null");
+				} else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d\\.]" )) {
+					json.append( value );
+				} else {
+					json.append("\"").append(
+						value.replace( "\\", "\\\\" ).replace( "\"", "\\\"" )
+					).append("\"");
+				}
 			} else {
 				serialize( subBranch, json, i+1 );
 			}
@@ -340,7 +431,7 @@ public class JSON extends AbstractTree {
 		}
 		json.append("\n");
 		indent( json, i );
-		if (integerKeys) json.append("]");
+		if (isArray) json.append("]");
 		else json.append("}");
 	}
 	
@@ -356,10 +447,14 @@ public class JSON extends AbstractTree {
 class ExecCleanJSON {
 	
 	public static void main ( String[] args ) throws Exception {
-		Tree json = new JSON(
-			FileActions.read(args[0]),
-			( args.length>1 ? Integer.parseInt(args[1]) : 3 ),
-			( args.length>2 ? Boolean.valueOf(args[2]) : false )
+		int leniency = ( args.length>1 ? Integer.parseInt(args[1]) : 3 );
+		int sortMode = ( args.length>2 ? Integer.valueOf(args[2]) : 2 );
+		boolean printArrays = ( args.length>3 ? Boolean.valueOf(args[3]) : true );
+		boolean printDebug = ( args.length>4 ? Boolean.valueOf(args[4]) : false );
+		boolean unescapedQuotes = ( args.length>5 ? Boolean.valueOf(args[5]) : false );
+		Tree json = new JSON( leniency, sortMode, printArrays, printDebug, unescapedQuotes );
+		json.deserialize(
+			FileActions.read( args[0] )
 		);
 		System.out.println(
 			json.serialize()

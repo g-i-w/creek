@@ -13,10 +13,12 @@ public interface Tree {
 	public Tree map ( Map<String,Tree> branches );
 
 	// Array style
+	public Tree add ( List<String> values );
 	public Tree add ( String value );
 	public Tree add ( Tree value );
 	
 	// Map/Object style
+	public Tree add ( Map<String,String> map );
 	public Tree add ( String key, String value );
 	public Tree add ( String key, Tree value );
 

@@ -1,11 +1,12 @@
 {
 	"a": "b",
-	"k": {
-		"a":"1",
+	"aa": {
+		"c":"1 "a" ", // unescaped quote
 		"b":"2",
-		"c": {
+		"a": {
 			"z":[1,2,3],
-			"y":"abc"
+			"y":"abc",
+			"x":abc
 		}, // trailing comma
 	// after this, there will be a loose asterisk:
 	}, *
@@ -20,5 +21,11 @@
 			 ],
 		}
 	],
+	// after this, there will be an unescaped quote
+	"oops": "I said "hi!" and...",
+	"all": "good... until he said "hi!" ",
+	"1":1
+	"11":11
+	"111":111
 }}
 
