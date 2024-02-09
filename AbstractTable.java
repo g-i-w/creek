@@ -15,7 +15,9 @@ public abstract class AbstractTable implements Table {
 	// concurrency
 	private AtomicBoolean writeLock = new AtomicBoolean(false);
 		
-	void obtainWriteLock () {
+	// Table interface
+	
+	public void obtainWriteLock () {
 		while (writeLock == null || !writeLock.compareAndSet( false, true )) {
 			try {
 				Thread.sleep(1);
@@ -25,12 +27,10 @@ public abstract class AbstractTable implements Table {
 		}
 	}
 	
-	void releaseWriteLock () {
+	public void releaseWriteLock () {
 		writeLock.set( false );
 	}
 		
-	// Table interface
-	
 	public List<List<String>> data () {
 		return data;
 	}
@@ -148,7 +148,32 @@ public abstract class AbstractTable implements Table {
 		return aSlice;
 	}
 
+	public Table replace ( Map<String,String> replacements ) {
+		return replace( replacements, 0, 0, -1, -1 );
+	}
 
+	public Table replace ( Map<String,String> replacements, int row0, int col0, int row1, int col1 ) {
+		if (row0<0) row0 = 0;
+		if (col0<0) col0 = 0;
+		obtainWriteLock();
+		if (row1<0 || row1>rowCount()) row1 = rowCount();
+		for (int row=row0; row<row1; row++) {
+			int colCount = colCount(row);
+			if (col0>=colCount) continue;
+			int endCol = col1;
+			if (col1<0 || col1>colCount) endCol = colCount;
+			List<String> line = data.get(row);
+			for (int col=col0; col<endCol; col++) {
+				String item = line.get(col);
+				if (item!=null && replacements.containsKey(item)) {
+					line.set(col, replacements.get(item));
+				}
+			}
+		}
+		releaseWriteLock();
+		return this;
+	}
+	
 	////////////////// Abstract method //////////////////
 	public abstract Table append ( String raw );
 	
@@ -229,4 +254,30 @@ public abstract class AbstractTable implements Table {
 		return serial();
 	}
 
+}
+
+class TestAbstractTable extends AbstractTable {
+
+	public Table append ( String raw ) { return this; }
+	
+	public String serial () {
+		return data().toString();
+	}
+	
+	public static void main ( String[] args ) {
+		Table test = new TestAbstractTable();
+		test.append( new String[]{ "a", "b" } );
+		test.append( new String[]{ "1", null, "3", "_" } );
+		test.append( new String[]{ "a", "b" } );
+		test.append( new String[]{ null, "b", "c" } );
+		System.out.println( test );
+		Map<String,String> map = new HashMap<>();
+		map.put( "1", "a" );
+		map.put( "2", "b" );
+		map.put( "3", "c" );
+		map.put( "a", "1" );
+		map.put( "b", "2" );
+		map.put( "c", "3" );
+		System.out.println( test.replace( map ) );
+	}
 }

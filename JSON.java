@@ -48,16 +48,16 @@ public class JSON extends AbstractTree {
 	// Leniency:
 	private int leniency;
 	// 3: as relaxed as possible, 2: just the essentials, 1: very rigorous, 0: overly pedantic
-	private static final int RELAXED = 3;
-	private static final int CAREFUL = 2;
-	private static final int RIGOROUS = 1;
-	private static final int PEDANTIC = 0;
+	public static final int RELAXED = 3;
+	public static final int CAREFUL = 2;
+	public static final int RIGOROUS = 1;
+	public static final int PEDANTIC = 0;
 	
 	// Seriousness:
 	// 3: caution label, 2: important note, 1: just FYI
-	private static final int CAUTION = 3;
-	private static final int NOTE = 2;
-	private static final int INFO = 1;
+	public static final int CAUTION = 3;
+	public static final int NOTE = 2;
+	public static final int INFO = 1;
 	private static final String[] reverse_seriousness = {
 		"",
 		"INFO",
@@ -67,6 +67,9 @@ public class JSON extends AbstractTree {
 	
 	// 0: no sorting, 1: maintain original sort order, 2: auto-sort
 	private int sortMode;
+	public static final int NO_ORDER = 0;
+	public static final int SAME_ORDER = 1;
+	public static final int AUTO_ORDER = 2;
 	
 	// automatically recognize arrays by consecutive integers starting at 0
 	private boolean printArrays;

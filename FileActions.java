@@ -181,22 +181,18 @@ public class FileActions {
 
 
 	public static TableFile regex ( File fileOrDir, TableFile tableFile ) throws Exception {
-		return regex( fileOrDir, tableFile, "(\\w+)", null );
+		return regex( fileOrDir, tableFile, "(\\w+)", false, "(\\w+)" );
 	}
 
-	public static TableFile regex ( File fileOrDir, TableFile tableFile, String regex, List<String> framing ) throws Exception {
-		return regex( fileOrDir, tableFile, regex, framing, false );
-	}
-
-	public static TableFile regex ( File fileOrDir, TableFile tableFile, String regex, List<String> framing, boolean verbose ) throws Exception {
+	public static TableFile regex ( File fileOrDir, TableFile tableFile, String regex, boolean verbose, String pathRegex ) throws Exception {
 		for (File file : recurse(fileOrDir)) {
-			if (verbose) System.out.println( "FileActions.regex: reading "+file.getAbsolutePath() );
-			tableFile.write(
+			if (verbose) System.err.println( "FileActions.regex: reading "+file.getAbsolutePath() );
+			tableFile.append(
 				Regex.table(
 					readLines( file ), // read lines
 					regex,
-					framing,
-					new CSV()
+					new CSV(),
+					Regex.groups( file.getPath(), pathRegex )
 				)
 			);
 		}
@@ -204,17 +200,18 @@ public class FileActions {
 	}
 	
 	public static TableFile regexBlob ( File fileOrDir, TableFile tableFile, String regex ) throws Exception {
-		return regexBlob( fileOrDir, tableFile, regex, false );
+		return regexBlob( fileOrDir, tableFile, regex, false, "(\\w+)" );
 	}
 
-	public static TableFile regexBlob ( File fileOrDir, TableFile tableFile, String regex, boolean verbose ) throws Exception {
+	public static TableFile regexBlob ( File fileOrDir, TableFile tableFile, String regex, boolean verbose, String pathRegex ) throws Exception {
 		for (File file : recurse(fileOrDir)) {
-			if (verbose) System.out.println( "FileActions.regex: reading "+file.getAbsolutePath() );
-			tableFile.write(
+			if (verbose) System.err.println( "FileActions.regexBlob: reading "+file.getAbsolutePath() );
+			tableFile.append(
 				Regex.table(
 					read( file ), // read blob
 					regex,
-					new CSV()
+					new CSV(),
+					Regex.groups( file.getPath(), pathRegex )
 				)
 			);
 		}
@@ -275,16 +272,6 @@ class ExecReplaceExtension {
 	}
 }
 
-class ExecRegex {
-
-	public static void main ( String[] args ) throws Exception {
-		List<String> framing = new ArrayList<>();
-		for (int i=3; i<args.length; i++) framing.add( args[i] );
-		System.err.println( args[2] );
-		FileActions.regex( new File(args[0]), new CSVFile(args[1]), args[2], framing, true );
-	}
-}
-
 class ExecRegexReplace {
 	// <oldFile> <newFile> <regexFile> <subOld> <subNew>
 	public static void main ( String[] args ) throws Exception {
@@ -293,11 +280,19 @@ class ExecRegexReplace {
 	}
 }
 
-class ExecRegexBlob {
+class ExecRegexCSV {
 
 	public static void main ( String[] args ) throws Exception {
-		System.err.println( args[2] );
-		FileActions.regexBlob( new File(args[0]), new CSVFile(args[1]), args[2], true );
+		System.err.println( "ExecRegexCSV: "+args[2] );
+		FileActions.regex( new File(args[0]), new CSVFile(args[1]), args[2], true, args[3] );
+	}
+}
+
+class ExecRegexBlobCSV {
+
+	public static void main ( String[] args ) throws Exception {
+		System.err.println( "ExecRegexBlobCSV: "+args[2] );
+		FileActions.regexBlob( new File(args[0]), new CSVFile(args[1]), args[2], true, args[3] );
 	}
 }
 

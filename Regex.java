@@ -27,15 +27,32 @@ public class Regex {
 	}
 
 	public static List<String> groups ( List<String> output, Matcher matcher ) throws Exception {
-		for (int i=0; i<matcher.groupCount(); i++)
+		for (int i=0; i<matcher.groupCount(); i++) {
 			output.add( matcher.group(i+1) );
+		}
+		//System.out.println( output );
 		return output;
 	}
 	
 	public static List<String> groups ( String input, String regex ) throws Exception {
 		List<String> output = new ArrayList<>();
+		if (input==null || regex==null) return output;
 		Matcher matcher = pattern( regex ).matcher( input );
 		while( matcher.find() ) groups( output, matcher );
+		return output;
+	}
+	
+	public static Table columnGroup ( Table input, String regex, int col, Table output ) throws Exception {
+		for (List<String> row : input.data()) {
+			int rowSize = row.size();
+			if (col > rowSize-1) continue;
+			List<String> subCols = groups( row.get( col ), regex );
+			List<String> newRow = new ArrayList<>( rowSize-1+subCols.size() );
+			for (int i=0; i<col; i++) newRow.add( row.get( i ) );
+			newRow.addAll( subCols );
+			for (int i=col+1; i<rowSize; i++) newRow.add( row.get( i ) );
+			output.append( newRow );
+		}
 		return output;
 	}
 	
@@ -70,8 +87,18 @@ public class Regex {
 	// Each group becomes one row of table
 	
 	public static Table table ( String input, String regex, Table table ) throws Exception {
+		return table( input, regex, table, null );
+	}
+	
+	public static Table table ( String input, String regex, Table table, List<String> tag ) throws Exception {
+		//System.out.println( "Regex.table input blob: "+input );
 		Matcher matcher = pattern( regex ).matcher( input );
-		while( matcher.find() ) table.append( groups( matcher ) );
+		//System.out.println( "Regex.table regex: "+regex );
+		while( matcher.find() ) {
+			List<String> row = new ArrayList<>( matcher.groupCount()+1 );
+			if (tag!=null) row.addAll( tag );
+			table.append( groups( row, matcher ) );
+		}
 		return table;
 	}
 	
@@ -82,14 +109,24 @@ public class Regex {
 	}
 		
 	public static Table table ( List<String> input, String regex ) throws Exception {
-		return table ( input, regex, new SimpleTable() );
+		return table ( input, regex, new SimpleTable(), null );
 	}
 	
 	public static Table table ( List<String> input, String regex, Table table ) throws Exception {
+		return table ( input, regex, table, null );
+	}
+	
+	public static Table table ( List<String> input, String regex, Table table, List<String> tag ) throws Exception {
+		//System.out.println( "Regex.table input lines: "+input );
 		List<String> row = new ArrayList<>();
 		for (String line : input) {
+			//System.out.println( "Regex.table line: "+line );
 			Matcher matcher = pattern( regex ).matcher( line );
-			while( matcher.find() ) groups( row, matcher );
+			while( matcher.find() ) {
+				if (tag!=null) row.addAll( tag );
+				groups( row, matcher );
+			}
+			//System.out.println( "Regex.table row: "+row );
 			if (row.size()>0) {
 				table.append( row );
 				row = new ArrayList<>();
@@ -158,6 +195,8 @@ public class Regex {
 		return pattern( regex ).matcher( line ).find();
 	}
 	
+
+
 	// testing
 	public static void main ( String[] args ) throws Exception {
 		List<String> list = Arrays.asList(
