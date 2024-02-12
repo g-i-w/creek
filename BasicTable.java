@@ -23,6 +23,10 @@ public class BasicTable extends AbstractTable {
 		return data().toString();
 	}
 	
+	public Table create () {
+		return new BasicTable();
+	}
+	
 	public static void main ( String[] args ) {
 		System.out.println(
 			(new BasicTable( new BasicTable() ))

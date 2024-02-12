@@ -87,6 +87,7 @@ public abstract class AbstractTable implements Table {
 	public Table copy ( Table table ) {
 		if (table == null) return this;
 		obtainWriteLock();
+		table.obtainWriteLock();
 		data = new ArrayList<List<String>>();
 		for (int row=0; row<table.rowCount(); row++) {
 			List<String> newRow = new ArrayList<String>();
@@ -95,6 +96,7 @@ public abstract class AbstractTable implements Table {
 			}
 			data.add( newRow );
 		}
+		table.releaseWriteLock();
 		releaseWriteLock();
 		return this;
 	}
@@ -148,6 +150,33 @@ public abstract class AbstractTable implements Table {
 		return aSlice;
 	}
 
+	public List<List<String>> set () {
+		Set<List<String>> set = new LinkedHashSet<>();
+		for (List<String> row : data) set.add( row );
+		List<List<String>> list = new ArrayList<>();
+		list.addAll( set );
+		return list;
+	}
+	
+	public List<List<String>> set ( int col ) {
+		Map<String,List<String>> map = new LinkedHashMap<>();
+		for (List<String> row : data) {
+			int rowLen = row.size();
+			if (col<0 && rowLen+col>=0) map.put( row.get( rowLen+col ), row ); // negative value: count back from end
+			else if (col<rowLen)        map.put( row.get( col )       , row ); // positive+0 value: count from start
+		}
+		return new ArrayList<>( map.values() );
+	}
+	
+	public List<List<String>> reverse () {
+		int len = data.size();
+		List<List<String>> reversed = new ArrayList<>( len );
+		for (int i=len-1; i>=0; i--) {
+			reversed.add( data.get(i) );
+		}
+		return reversed;
+	}
+	
 	public Table replace ( Map<String,String> replacements ) {
 		return replace( replacements, 0, 0, -1, -1 );
 	}
@@ -156,7 +185,7 @@ public abstract class AbstractTable implements Table {
 		if (row0<0) row0 = 0;
 		if (col0<0) col0 = 0;
 		obtainWriteLock();
-		if (row1<0 || row1>rowCount()) row1 = rowCount();
+		if (row1<0 || row1>data.size()) row1 = data.size();
 		for (int row=row0; row<row1; row++) {
 			int colCount = colCount(row);
 			if (col0>=colCount) continue;
@@ -179,6 +208,9 @@ public abstract class AbstractTable implements Table {
 	
 	////////////////// Abstract method //////////////////
 	public abstract String serial ();
+	
+	////////////////// Abstract method //////////////////
+	public abstract Table create ();
 	
 	public int rowCount () {
 		return data.size();
@@ -264,12 +296,20 @@ class TestAbstractTable extends AbstractTable {
 		return data().toString();
 	}
 	
+	public Table create () {
+		return new TestAbstractTable();
+	}
+	
 	public static void main ( String[] args ) {
 		Table test = new TestAbstractTable();
 		test.append( new String[]{ "a", "b" } );
 		test.append( new String[]{ "1", null, "3", "_" } );
 		test.append( new String[]{ "a", "b" } );
+		test.append( new String[]{ "b", "a" } );
 		test.append( new String[]{ null, "b", "c" } );
+		test.append( new String[]{ "2", "b", "c" } );
+		test.append( new String[]{ "20", "b", "c" } );
+		test.append( new String[]{ "200", "b", "c" } );
 		System.out.println( test );
 		Map<String,String> map = new HashMap<>();
 		map.put( "1", "a" );
@@ -279,5 +319,9 @@ class TestAbstractTable extends AbstractTable {
 		map.put( "b", "2" );
 		map.put( "c", "3" );
 		System.out.println( test.replace( map ) );
+		
+		System.out.println( "*** set():\n"+test.set() );
+		System.out.println( "*** set(col):\n"+test.set(1) );
+		System.out.println( "*** reverse():\n"+test.reverse() );
 	}
 }

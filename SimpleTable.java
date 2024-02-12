@@ -35,6 +35,9 @@ public class SimpleTable extends AbstractTable {
 		append( serial );
 	}
 	
+	public Table create () {
+		return new SimpleTable();
+	}
 	
 	public String serial () {
 		obtainWriteLock();

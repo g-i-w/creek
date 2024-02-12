@@ -3,13 +3,16 @@ package creek;
 import java.util.*;
 
 public interface Table {
-	// Not restricted and not thread-safe
+	// Non-restricted and not intrinsically thread-safe
 	public Table data ( List<List<String>> data );
 	public List<List<String>> data ();
 	
 	public List<List<String>> last ( int lastRows );
 	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive );
 	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive );
+	public List<List<String>> set ();
+	public List<List<String>> set ( int col );
+	public List<List<String>> reverse ();
 		
 	// Simple, restricted, and mostly thread-safe
 	public String item ( int row, int col );

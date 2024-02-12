@@ -71,6 +71,9 @@ public class CSV extends AbstractTable {
 	}
 	
 	
+	public Table create () {
+		return new CSV( comma, escape, quote );
+	}
 	
 	public String serial () {
 		StringBuilder csv = new StringBuilder();
