@@ -81,6 +81,14 @@ public class FileActions {
 		return ( lastPeriod > 0 && lastPeriod < fileName.length()-2 );
 	}
 	
+	public static String minName ( String path ) {
+		return name( (new File(path)).getName() );
+	}
+
+	public static String minName ( File file ) {
+		return name( file.getName() );
+	}
+
 	public static String name ( File file ) {
 		return name( file.getAbsolutePath() );
 	}
@@ -115,6 +123,8 @@ public class FileActions {
 		return new File( name( path ) + suffix + "." + extension( path ) );
 	}
 
+	// Read/write File object
+
 	public static List<String> readLines ( File file ) throws Exception {
 		return Files.readAllLines( file.toPath() );
 	}
@@ -135,8 +145,21 @@ public class FileActions {
 		return write( file, bytes, false );
 	}
 
+	public static File write ( File file, String input, String encoding, boolean append ) throws Exception {
+		//byte[] output = Charset.forName(encoding).encode(input).array();
+		byte[] output = input.getBytes( encoding );
+		return write( file, output, append );
+	}
+	
 	public static File write ( File file, byte[] bytes, boolean append ) throws Exception {
-		if (!file.exists()) file.createNewFile();
+		if (append) {
+			// append operation
+			if (!file.exists()) file.createNewFile();
+		} else {
+			// overwrite operation
+			if (file.exists()) file.delete();
+			file.createNewFile();
+		}
 		Files.write(
 			file.toPath(),
 			bytes,
@@ -145,7 +168,8 @@ public class FileActions {
 		return file;
 	}
 	
-
+	// Read/write String path
+	
 	public static List<String> readLines ( String path ) throws Exception {
 		return readLines( new File( path ) );
 	}
@@ -162,6 +186,11 @@ public class FileActions {
 		return write( new File( path ), text.getBytes() );
 	}
 
+	public static File write ( String path, String input, String encoding ) throws Exception {
+		return write( new File( path ), input, encoding, false );
+	}
+
+	// Regexs
 
 	public static Table regex ( String path ) throws Exception {
 		return regex( path, "(\\w+)" );
@@ -236,7 +265,93 @@ public class FileActions {
 		String output = Regex.replace( input, regex, framing, subOld, subNew );
 		return write( newFile, output.getBytes() );
 	}
+	
+	// misc
+	
+	public static TableFile derive ( TableFile parent, String suffix, Table table ) throws Exception {
+		return parent
+			.create( addSuffix( parent.file(), suffix ) )
+			.append( table );
+	}
+	
+	public static List<TableFile> split ( TableFile parent, int col, String[] breakRegex ) throws Exception {
+		List<TableFile> files = new ArrayList<>();
+		Table tempTable = new CSV();
+		
+		int breakRegexIndex = 0;
+		int fileCount = 0;
+		
+		for (List<String> row : parent.table().data()) {
+			if (
+				breakRegexIndex<breakRegex.length
+				&& col<row.size()
+				&& Regex.exists( row.get(col), breakRegex[breakRegexIndex] )
+			) {
+				// increment index
+				breakRegexIndex++;
+				// create a new TableFile, append temp Table, and add to list
+				files.add( derive( parent, "."+(++fileCount), tempTable ) );
+				// create a new temp Table
+				tempTable = new CSV();
+			}
+			tempTable.append( row );
+		}
+		
+		if (tempTable.rowCount()>0) {
+			// add remainder rows to a final file
+			files.add( derive( parent, "."+(++fileCount), tempTable ) );
+		}
 
+		return files;
+	}
+	
+	public static Table combine ( Table table, List<TableFile> files ) {
+		for (TableFile file : files) {
+			table.append( file.table() );
+		}
+		return table;
+	}
+	
+	public static Table combine ( Table table, File parent ) throws Exception {
+		int fileCount = 0;
+		File subFile;
+		while (
+			(
+				subFile = addSuffix( parent, "."+(++fileCount) ) // assign-eval
+			).exists()
+		) {
+			table.append(
+				(new CSVFile(subFile)).table()
+			);
+		}
+		return table;
+	}
+	
+	public static Table combine ( Table table, String path ) throws Exception {
+		return combine( table, new File(path) );
+	}
+
+
+}
+
+class ExecSplit {
+	public static void main ( String[] args ) throws Exception {
+		String[] breakPoints = Arrays.copyOfRange( args, 2, args.length );
+		FileActions.split( new CSVFile(args[0]), Integer.parseInt(args[1]), breakPoints );
+	}
+}
+
+class ExecCombine {
+	public static void main ( String[] args ) throws Exception {
+		new CSVFile( args[0], false, FileActions.combine( new CSV(), args[0] ) );
+	}
+}
+
+class ExecConvertText {
+	// <input> <output> <encoding>
+	public static void main ( String[] args ) throws Exception {
+		FileActions.write( args[1], FileActions.read( args[0] ), args[2] );
+	}
 }
 
 class ExecAuto {
@@ -283,16 +398,16 @@ class ExecRegexReplace {
 class ExecRegexCSV {
 
 	public static void main ( String[] args ) throws Exception {
-		System.err.println( "ExecRegexCSV: "+args[2] );
-		FileActions.regex( new File(args[0]), new CSVFile(args[1]), args[2], true, args[3] );
+		System.err.println( "ExecRegexCSV: "+args[2]+", "+args[3] );
+		FileActions.regex( new File(args[0]), new CSVFile(args[1], false), args[2], true, args[3] );
 	}
 }
 
 class ExecRegexBlobCSV {
 
 	public static void main ( String[] args ) throws Exception {
-		System.err.println( "ExecRegexBlobCSV: "+args[2] );
-		FileActions.regexBlob( new File(args[0]), new CSVFile(args[1]), args[2], true, args[3] );
+		System.err.println( "ExecRegexBlobCSV: "+args[2]+", "+args[3] );
+		FileActions.regexBlob( new File(args[0]), new CSVFile(args[1], false), args[2], true, args[3] );
 	}
 }
 
@@ -332,6 +447,15 @@ class ExecSubstringFind {
 		String input = FileActions.read(args[0]);
 		String output = input.substring( input.indexOf(args[2]), input.indexOf(args[3]) );
 		FileActions.write( args[1], output );
+	}
+}
+
+class ExecRemoveDuplicatesCSV {
+
+	public static void main ( String[] args ) throws Exception {
+		TableFile input = new CSVFile(args[0]);
+		if (args.length>2) new CSVFile( args[1], false, input.table().set(Integer.parseInt(args[2])) );
+		else new CSVFile( args[1], false, input.table().set() );
 	}
 }
 

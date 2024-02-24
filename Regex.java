@@ -17,7 +17,11 @@ public class Regex {
 		}
 		return patternCache.get( regex );
 	}
-		
+	
+	public static Matcher matcher ( String input, String regex ) {
+		return pattern( regex ).matcher( input );
+	}
+
 	////////// Simple output methods //////////
 
 	// Groups
@@ -37,7 +41,7 @@ public class Regex {
 	public static List<String> groups ( String input, String regex ) throws Exception {
 		List<String> output = new ArrayList<>();
 		if (input==null || regex==null) return output;
-		Matcher matcher = pattern( regex ).matcher( input );
+		Matcher matcher = matcher( input, regex );
 		while( matcher.find() ) groups( output, matcher );
 		return output;
 	}
@@ -77,7 +81,7 @@ public class Regex {
 	}
 
 	public static List<String> compounds ( List<String> output, String input, String regex, List<String> framing ) throws Exception {
-		Matcher matcher = pattern(regex).matcher(input);
+		Matcher matcher = matcher( input, regex );
 		while (matcher.find()) output.add( compound( matcher, framing ) );
 		return output;
 	}
@@ -92,7 +96,7 @@ public class Regex {
 	
 	public static Table table ( String input, String regex, Table table, List<String> tag ) throws Exception {
 		//System.out.println( "Regex.table input blob: "+input );
-		Matcher matcher = pattern( regex ).matcher( input );
+		Matcher matcher = matcher( input, regex );
 		//System.out.println( "Regex.table regex: "+regex );
 		while( matcher.find() ) {
 			List<String> row = new ArrayList<>( matcher.groupCount()+1 );
@@ -121,7 +125,7 @@ public class Regex {
 		List<String> row = new ArrayList<>();
 		for (String line : input) {
 			//System.out.println( "Regex.table line: "+line );
-			Matcher matcher = pattern( regex ).matcher( line );
+			Matcher matcher = matcher( line, regex );
 			while( matcher.find() ) {
 				if (tag!=null) row.addAll( tag );
 				groups( row, matcher );
@@ -172,7 +176,7 @@ public class Regex {
 	}
 	
 	public static String replace ( String input, String regex, List<String> framing, String subOld, String subNew ) throws Exception {
-		Matcher matcher = pattern(regex).matcher(input);
+		Matcher matcher = matcher( input, regex );
 		StringBuilder output = new StringBuilder();
 		int lastIndex = 0;
 		while (matcher.find()) {
@@ -192,7 +196,7 @@ public class Regex {
 	////////// Exists //////////
 
 	public static boolean exists ( String line, String regex ) {
-		return pattern( regex ).matcher( line ).find();
+		return matcher( line, regex ).find();
 	}
 	
 

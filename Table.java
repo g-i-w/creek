@@ -7,12 +7,12 @@ public interface Table {
 	public Table data ( List<List<String>> data );
 	public List<List<String>> data ();
 	
-	public List<List<String>> last ( int lastRows );
-	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive );
-	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive );
-	public List<List<String>> set ();
-	public List<List<String>> set ( int col );
-	public List<List<String>> reverse ();
+	public Table last ( int lastRows );
+	public Table slice ( int startRowInclusive, int endRowExclusive );
+	public Table slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive );
+	public Table set ();
+	public Table set ( int col );
+	public Table reverse ();
 		
 	// Simple, restricted, and mostly thread-safe
 	public String item ( int row, int col );
@@ -34,6 +34,7 @@ public interface Table {
 	public Table append ( List<String> row );
 	public Table append ( String raw );
 	public Table replace ( Map<String,String> replacements );
+	public Table replace ( Map<String,String> replacements, int col );
 	public Table replace ( Map<String,String> replacements, int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive );
 	
 	public String serial ();

@@ -59,6 +59,10 @@ public class CSVFile implements TableFile {
 
 	// TableFile interface
 	
+	public TableFile create ( File file ) throws Exception {
+		return new CSVFile( file, false, null, "," );
+	}
+	
 	public File file () {
 		return file;
 	}
@@ -68,10 +72,8 @@ public class CSVFile implements TableFile {
 	}
 
 	public TableFile clear () throws Exception {
-		Files.write(
-			file.toPath(),
-			new byte[]{} // empty file
-		);
+		if (file.exists()) file.delete();
+		file.createNewFile(); // empty file
 		csv = new CSV( csv.comma(), csv.escape(), csv.quote() );
 		return this;
 	}
@@ -106,13 +108,11 @@ public class CSVFile implements TableFile {
 	}
 	
 	public TableFile write ( Table table, boolean append ) throws Exception {
-		if (table == null) {
-			if (! append) clear(); // write operation
-			return this;
-		}
+		if (! append) clear(); // write operation
+		if (table == null) return this;
 		CSV newCsv = new CSV( csv.comma(), csv.escape(), csv.quote() );
 		newCsv.append( table );
-		if (!file.exists()) clear();
+		if (!file.exists()) file.createNewFile();
 		Files.write(
 			file.toPath(),
 			newCsv.serial().getBytes(),

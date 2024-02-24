@@ -124,21 +124,21 @@ public abstract class AbstractTable implements Table {
 		return this;
 	}
 	
-	public List<List<String>> last ( int lastRows ) {
+	public Table last ( int lastRows ) {
 		int rowCount = rowCount();
 		return slice( rowCount-lastRows, rowCount );
 	}
 	
-	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive ) {
+	public Table slice ( int startRowInclusive, int endRowExclusive ) {
 		int rowCount = rowCount();
 		if (startRowInclusive < 0) startRowInclusive = 0;
 		if (endRowExclusive > rowCount) endRowExclusive = rowCount;
 		List<List<String>> aSlice = new ArrayList<>();
 		for (int i=startRowInclusive; i<endRowExclusive; i++) aSlice.add( data.get(i) );
-		return aSlice;
+		return create().data( aSlice );
 	}
 	
-	public List<List<String>> slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive ) {
+	public Table slice ( int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive ) {
 		List<List<String>> aSlice = new ArrayList<>();
 		for (int a=startRowInclusive; a<endRowExclusive; a++) {
 			List<String> row = new ArrayList<>();
@@ -147,38 +147,42 @@ public abstract class AbstractTable implements Table {
 			}
 			aSlice.add( row );
 		}
-		return aSlice;
+		return create().data( aSlice );
 	}
 
-	public List<List<String>> set () {
+	public Table set () {
 		Set<List<String>> set = new LinkedHashSet<>();
 		for (List<String> row : data) set.add( row );
 		List<List<String>> list = new ArrayList<>();
 		list.addAll( set );
-		return list;
+		return create().data( list );
 	}
 	
-	public List<List<String>> set ( int col ) {
+	public Table set ( int col ) {
 		Map<String,List<String>> map = new LinkedHashMap<>();
 		for (List<String> row : data) {
 			int rowLen = row.size();
 			if (col<0 && rowLen+col>=0) map.put( row.get( rowLen+col ), row ); // negative value: count back from end
 			else if (col<rowLen)        map.put( row.get( col )       , row ); // positive+0 value: count from start
 		}
-		return new ArrayList<>( map.values() );
+		return create().data( new ArrayList<>( map.values() ) );
 	}
 	
-	public List<List<String>> reverse () {
+	public Table reverse () {
 		int len = data.size();
 		List<List<String>> reversed = new ArrayList<>( len );
 		for (int i=len-1; i>=0; i--) {
 			reversed.add( data.get(i) );
 		}
-		return reversed;
+		return create().data( reversed );
 	}
 	
 	public Table replace ( Map<String,String> replacements ) {
 		return replace( replacements, 0, 0, -1, -1 );
+	}
+
+	public Table replace ( Map<String,String> replacements, int col ) {
+		return replace( replacements, 0, col, -1, col+1 );
 	}
 
 	public Table replace ( Map<String,String> replacements, int row0, int col0, int row1, int col1 ) {

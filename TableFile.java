@@ -4,6 +4,8 @@ import java.io.File;
 
 public interface TableFile {
 
+	public TableFile create ( File file ) throws Exception;
+
 	public File file ();
 
 	public Table table ();

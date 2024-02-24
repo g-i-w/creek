@@ -56,7 +56,7 @@ public class CSVLog extends CSVFile implements LogFile {
 	
 	public LogFile trimmed ( int rows ) throws Exception {
 		//System.out.println( "table.last: "+table().last( rows ) );
-		return newLog( (new CSV()).data(table().last( rows )) );
+		return newLog( (new CSV()).data( table().last( rows ).data() ) );
 	}
 	
 	public LogFile append ( List<String> sample ) throws Exception {

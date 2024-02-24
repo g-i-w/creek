@@ -68,7 +68,7 @@ public class JSON extends AbstractTree {
 	// 0: no sorting, 1: maintain original sort order, 2: auto-sort
 	private int sortMode;
 	public static final int NO_ORDER = 0;
-	public static final int SAME_ORDER = 1;
+	public static final int RETAIN_ORDER = 1;
 	public static final int AUTO_ORDER = 2;
 	
 	// automatically recognize arrays by consecutive integers starting at 0
@@ -82,7 +82,7 @@ public class JSON extends AbstractTree {
 	
 	// normal constructors
 	
-	public JSON ( int leniency, int sortMode, boolean printArrays, boolean printDebug, boolean unescapedQuotes ) {
+	public JSON ( int sortMode, int leniency, boolean printArrays, boolean printDebug, boolean unescapedQuotes ) {
 		this.leniency = leniency;
 		this.sortMode = sortMode;
 		this.printArrays = printArrays;
@@ -90,35 +90,35 @@ public class JSON extends AbstractTree {
 		this.unescapedQuotes = unescapedQuotes;
 	}
 	
-	public JSON ( int leniency, int sortMode ) {
-		this( leniency, sortMode, true, false, false );
+	public JSON ( int sortMode, int leniency ) {
+		this( sortMode, leniency, true, false, false );
 	}
 	
-	public JSON ( int leniency ) {
-		this( leniency, 2, true, false, false );
+	public JSON ( int sortMode ) {
+		this( sortMode, RELAXED, true, false, false );
 	}
 	
 	public JSON () {
-		this( RELAXED, 2, true, false, false );
+		this( RETAIN_ORDER, RELAXED, true, false, false );
 	}
 
 	public Tree create () {
-		return new JSON( leniency, sortMode, printArrays, printDebug, unescapedQuotes );
+		return new JSON( sortMode, leniency, printArrays, printDebug, unescapedQuotes );
 	}
 	
 	// constructors that can throw Exception
 
-	public JSON ( String serial, int leniency, int sortMode ) throws Exception {
-		this( leniency, sortMode, true, false, false );
+	public JSON ( String serial, int sortMode, int leniency ) throws Exception {
+		this( sortMode, leniency, true, false, false );
 		deserialize( serial );
 	}
 	
-	public JSON ( String serial, int leniency ) throws Exception {
-		this( serial, leniency, 2 );
+	public JSON ( String serial, int sortMode ) throws Exception {
+		this( serial, sortMode, RELAXED );
 	}
 	
 	public JSON ( String serial ) throws Exception {
-		this( serial, RELAXED, 2 );
+		this( serial, RETAIN_ORDER, RELAXED );
 	}
 	
 	////////// map( ) //////////
@@ -420,7 +420,7 @@ public class JSON extends AbstractTree {
 				String value = subBranch.value();
 				if (value==null) {
 					json.append("null");
-				} else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d\\.]" )) {
+				} else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d]" )) {
 					json.append( value );
 				} else {
 					json.append("\"").append(

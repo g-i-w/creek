@@ -71,7 +71,7 @@ public class SimpleTable extends AbstractTable {
 	// convert serial to data
 	public Table append ( String serial ) {
 		obtainWriteLock();
-		for (Character c : serial.toCharArray()) {
+		for (char c : serial.toCharArray()) {
 
 			// transition and output logic
 			if (state == LINE_START_STATE) {
