@@ -59,7 +59,10 @@ public class SimpleTable extends AbstractTable {
 				String item = row.get(col);
 				if (item == null) item = "";
 				serial.append( item );
-				if (col<itemCount-1) for (int spaces=item.length(); spaces<colWidth.get(col)+4; spaces++) serial.append( " " );
+				if (col<itemCount-1) {
+					int width = ( colWidth.get(col)!=null ? colWidth.get(col) : 0 );
+					for (int spaces=item.length(); spaces<width+4; spaces++) serial.append( " " );
+				}
 			}
 			serial.append( "\n" );
 		}

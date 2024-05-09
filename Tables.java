@@ -32,6 +32,10 @@ public class Tables {
 	// convert a Table to HTML
 	
 	public static String html ( Table original ) {
+		return html( original, true );
+	}
+
+	public static String html ( Table original, boolean merge ) {
 		return html(
 			original,
 			"table {\n"+
@@ -42,11 +46,17 @@ public class Tables {
 
 			"\tpadding:8px;\n"+
 			"}"
+			,
+			merge
 		);
 	}
 	
 	public static String html ( Table original, String css ) {
-		Table table = mergeVertical( original, null );
+		return html( original, css, true );
+	}
+
+	public static String html ( Table original, String css, boolean merge ) {
+		Table table = ( merge ? mergeVertical( original, null ) : original );
 		StringBuilder html = new StringBuilder();
 		html
 			.append("<style>\n")
