@@ -46,6 +46,14 @@ public class Regex {
 		return output;
 	}
 	
+	public static String first ( String input, String regex ) {
+		try {
+			return groups( input, regex ).get(0);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
 	public static Table columnGroup ( Table input, String regex, int col, Table output ) throws Exception {
 		for (List<String> row : input.data()) {
 			int rowSize = row.size();

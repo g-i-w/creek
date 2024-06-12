@@ -154,7 +154,7 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	public String toString () {
-		return ( map().size()>0 ? map().toString() : value() );
+		return ( map()!=null && map().size()>0 ? map().toString() : String.valueOf( value() ) );
 	}
 
 	public String serialize () {
