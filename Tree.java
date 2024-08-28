@@ -33,8 +33,15 @@ public interface Tree {
 	public Collection<Tree> branches ();
 	public int size ();
 	
+	// numerical keys
 	public boolean integerKeys ();
 	public String integerKey();
+	
+	// numerical values
+	public int integerValue ();
+	public double doubleValue ();
+	public Tree increment ();
+	public Tree decrement ();
 	
 	// I/O
 	public String serialize ();

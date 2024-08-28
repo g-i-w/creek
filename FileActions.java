@@ -3,9 +3,16 @@ package creek;
 import java.util.*;
 import java.io.*;
 import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.charset.*;
 
 public class FileActions {
+
+	public static final Charset UTF8 = StandardCharsets.UTF_8;
+	public static final Charset UTF16 = StandardCharsets.UTF_16;
+	public static final Charset UTF16BE = StandardCharsets.UTF_16BE;
+	public static final Charset UTF16LE = StandardCharsets.UTF_16LE;
+	public static final Charset ASCII = StandardCharsets.US_ASCII;
 
 	public static File pwd () {
 		return new File( System.getProperty("user.dir") );
@@ -126,7 +133,11 @@ public class FileActions {
 	// Read/write File object
 
 	public static List<String> readLines ( File file ) throws Exception {
-		return Files.readAllLines( file.toPath() );
+		return readLines( file, Charset.defaultCharset() );
+	}
+	
+	public static List<String> readLines ( File file, Charset charset ) throws Exception {
+		return Files.readAllLines( file.toPath(), charset );
 	}
 	
 	public static byte[] readBytes ( File file ) throws Exception {

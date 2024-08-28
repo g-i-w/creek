@@ -138,6 +138,7 @@ public abstract class AbstractTree implements Tree {
 		else return map.size();
 	}
 	
+	// numerical keys
 	public boolean integerKeys () {
 		int i = 0;
 		for (String key : keys()) {
@@ -153,6 +154,34 @@ public abstract class AbstractTree implements Tree {
 		return key;
 	}
 	
+	// numerical values
+	public int integerValue () {
+		try {
+			return ( value()!=null ? Integer.parseInt( value() ) : 0 );
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+	
+	public double doubleValue () {
+		try {
+			return ( value()!=null ? Double.parseDouble( value() ) : 0.0 );
+		} catch (Exception e) {
+			return 0.0;
+		}
+	}
+	
+	public Tree increment () {
+		value( String.valueOf( integerValue() + 1 ) );
+		return this;
+	}
+	
+	public Tree decrement () {
+		value( String.valueOf( integerValue() - 1 ) );
+		return this;
+	}
+	
+	// output
 	public String toString () {
 		return ( map()!=null && map().size()>0 ? map().toString() : String.valueOf( value() ) );
 	}
