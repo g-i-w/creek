@@ -49,6 +49,7 @@ public abstract class AbstractTree implements Tree {
 	
 	// Array style entry
 	public Tree add ( String value ) {
+		value = value.intern();
 		Tree branch = create();
 		branch.value( value );
 		add( branch );
@@ -69,6 +70,8 @@ public abstract class AbstractTree implements Tree {
 	
 	// Map or Object style entry
 	public Tree add ( String key, String value ) {
+		key = key.intern();
+		if (value!=null) value = value.intern();
 		Tree branch = create();
 		branch.value( value );
 		add( key, branch );
@@ -77,8 +80,10 @@ public abstract class AbstractTree implements Tree {
 	
 	// Map or Object style entry
 	public Tree add ( String key, Tree other ) {
-		if (key==null || key.equals("")) map().put( integerKey(), other );
-		else map().put( key, other );
+		//if (key==null || key.equals("")) map().put( integerKey(), other );
+		//else map().put( key, other );
+		key = key.intern();
+		map().put( key, other );
 		return this;
 	}
 		
@@ -150,7 +155,7 @@ public abstract class AbstractTree implements Tree {
 	
 	public String integerKey () {
 		String key;
-		while (map().containsKey(key=String.valueOf(integerKey))) integerKey++;
+		while (map().containsKey(key=String.valueOf(integerKey).intern())) integerKey++;
 		return key;
 	}
 	
@@ -172,12 +177,12 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	public Tree increment () {
-		value( String.valueOf( integerValue() + 1 ) );
+		value( String.valueOf( integerValue() + 1 ).intern() );
 		return this;
 	}
 	
 	public Tree decrement () {
-		value( String.valueOf( integerValue() - 1 ) );
+		value( String.valueOf( integerValue() - 1 ).intern() );
 		return this;
 	}
 	
