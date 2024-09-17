@@ -16,16 +16,12 @@ public class FilesystemTree extends AbstractTree {
 	}
 	
 	public FilesystemTree ( File file ) {
-		if (file==null) throw new RuntimeException( "Null file" );
+		if (file==null) throw new RuntimeException( "Error: File object is null" );
 		file( file );
 	}
 	
-	public boolean exists () {
-		return (file != null && file.exists());
-	}
-	
 	public boolean dir () {
-		return (exists() && file.isDirectory());
+		return (file.exists() && file.isDirectory());
 	}
 	
 	public void clear () {
@@ -100,6 +96,21 @@ public class FilesystemTree extends AbstractTree {
 		write( valueFile(), value );
 	}
 	
+	public void sort ( File[] files ) {
+		Arrays.sort(
+			files,
+			new Comparator<File>() {
+				public int compare(File f1, File f2) {
+					try {
+						return Integer.valueOf(f1.getName()).compareTo(Integer.valueOf(f2.getName()));
+					} catch (Exception e) {
+						return f1.getName().compareTo(f2.getName());
+					}
+				}
+			}
+		);
+	}
+	
 	public File file () {
 		return file;
 	}
@@ -126,9 +137,14 @@ public class FilesystemTree extends AbstractTree {
 	public Map<String,Tree> map () {
 		if (dir()) {
 			Map<String,Tree> map = new LinkedHashMap<>();
-			for (File f : file.listFiles()) {
-				if (file.getName().equals( valueKeyword )) continue; // skip value file
-				map().put( f.getName(), new FilesystemTree( f ) );
+			File[] files = file.listFiles();
+			sort( files );
+			for (File f : files) {
+				String key = f.getName();
+				if (key.charAt(0)=='.') continue; // skip hidden, this, & parent dirs
+				if (key.equals( valueKeyword )) continue; // skip value file
+				Tree branch = new FilesystemTree( f );
+				map.put( key, branch );
 			}
 			return map;
 		}
@@ -137,15 +153,12 @@ public class FilesystemTree extends AbstractTree {
 	
 	@Override
 	public String value () {
-		if (!exists()) return null;
-		
-		try {
-			if (dir()) return read( valueFile() );
-			else       return read();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+		if (dir()) {
+			if (valueFile().exists()) return read( valueFile() );
+		} else {
+			if (file.exists()) return read();
 		}
+		return null;
 	}
 
 	@Override
@@ -249,9 +262,9 @@ public class FilesystemTree extends AbstractTree {
 		
 		Tree fst0 = new FilesystemTree( args[1] );
 		fst0.deserialize( json );
-		
-		Tree fst1 = new FilesystemTree( args[1] );
-		System.out.println( fst1.serialize() );
+
+		//Tree fst1 = new FilesystemTree( args[1] );
+		//System.out.println( fst1.serialize() );
 	}
 	
 

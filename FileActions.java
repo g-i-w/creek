@@ -46,7 +46,7 @@ public class FileActions {
 
 	public static List<File> recurse ( File file, List<File> list ) {
 		if (file == null || !file.exists()) return new ArrayList<File>();
-		if (file.getName().indexOf(".")!=0) {
+		if (file.getName().charAt(0)!='.') {
 			if (file.isDirectory()) {
 				for (File f : file.listFiles()) recurse( f, list );
 			} else {
