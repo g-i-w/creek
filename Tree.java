@@ -56,5 +56,6 @@ public interface Tree {
 	
 	// data
 	public Tree data ( List<List<String>> data );
+	public void synchronize ( Tree toUpdate );
 	
 }

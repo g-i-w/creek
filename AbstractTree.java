@@ -239,16 +239,24 @@ public abstract class AbstractTree implements Tree {
 	
 	public Tree data ( List<List<String>> data ) {
 		for (List<String> row : data) {
-			int size = row.size();
-			if (size>2) {
-				int last = size-1;
-				auto( row.subList(0,last-1) ).add( row.get(last-1), row.get(last) );
+			Tree branch = create();
+			for (String item : row) {
+				branch.add( item );
 			}
-			else if (size>1) add( row.get(0), row.get(1) );
-			else if (size>0) add( row.get(0) );
+			add( branch );
 		}
 		return this;
-	}	
+	}
+	
+	public void synchronize ( Tree other ) {
+		for (String key : keys()) {
+			Tree thisBranch = get( key );
+			Tree otherBranch = other.auto( key );
+			if (thisBranch!=null) thisBranch.synchronize( otherBranch );
+		}
+		if (value()!=null) other.value( value() );
+	}
+	
 }
 
 class TestAbstractTree extends AbstractTree {
