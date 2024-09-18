@@ -49,7 +49,7 @@ public interface Tree {
 	
 	// Flattening
 	public Set<Set<Tree>> routes ();
-	public void routes ( Set<Set<Tree>> allRoutes, Set<Tree> startingPoint );
+	public boolean routes ( Set<Set<Tree>> allRoutes, Set<Tree> startingPoint ); // true if no loops
 	
 	public List<List<String>> paths ();
 	public void paths ( List<List<String>> allPaths, List<String> startingPoint );

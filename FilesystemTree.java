@@ -125,12 +125,16 @@ public class FilesystemTree extends AbstractTree {
 		return this; // to satisfy return type
 	}
 	
-	public File create ( String key ) {
+	public File createFile ( String key ) {
 		return new File( file, key );
 	}
 
 	public File valueFile () {
-		return create( valueKeyword );
+		return createFile( valueKeyword );
+	}
+	
+	public Tree createTree ( File f ) {
+		return new FilesystemTree( f );
 	}
 
 	@Override
@@ -143,7 +147,7 @@ public class FilesystemTree extends AbstractTree {
 				String key = f.getName();
 				if (key.charAt(0)=='.') continue; // skip hidden, this, & parent dirs
 				if (key.equals( valueKeyword )) continue; // skip value file
-				Tree branch = new FilesystemTree( f );
+				Tree branch = createTree( f );
 				map.put( key, branch );
 			}
 			return map;
@@ -170,6 +174,7 @@ public class FilesystemTree extends AbstractTree {
 	
 	@Override
 	public Tree map ( Map<String,Tree> map ) {
+		if (map==null) return this;
 		clear();
 		toDirectory();
 		for (String key : map.keySet()) {
@@ -199,6 +204,7 @@ public class FilesystemTree extends AbstractTree {
 	
 	@Override
 	public Tree add ( Map<String,String> map ) {
+		if (map==null) return this;
 		toDirectory();
 		for (String key : map.keySet()) {
 			String value = map.get(key);
@@ -210,38 +216,38 @@ public class FilesystemTree extends AbstractTree {
 	@Override
 	public Tree add ( String key, String value ) {
 		toDirectory();
-		write( create( key ), value );
+		write( createFile( key ), value );
 		return this;
 	}
 	
 	@Override
 	public Tree add ( String key, Tree treeBranch ) {
 		toDirectory();
-		File fileBranch = create( key );
-		if (treeBranch.size()==0) { // no map keys, so check for value
+		File fileBranch = createFile( key );
+		if (treeBranch==null || treeBranch.size()==0) { // no map keys, so check for value
 			if (treeBranch.value() != null) write( fileBranch, treeBranch.value() );
 			else mkdir( fileBranch );
 		} else {
-			Tree fileBranchObj = new FilesystemTree( fileBranch );
-			fileBranchObj.map( treeBranch.map() ); // recurse; via add( Map<String,Tree> )
+			Tree fileBranchObj = createTree( fileBranch );
+			fileBranchObj.map( treeBranch.map() ); // recurse; via map( Map<String,Tree> )
 		}
 		return this;
 	}
 
 	@Override
 	public Tree get ( String key ) {
-		File f = create( key );
-		if (f.exists()) return new FilesystemTree( f );
+		File f = createFile( key );
+		if (f.exists()) return createTree( f );
 		else return null;
 	}
 	
 	@Override
 	public Tree auto ( String key ) {
-		File f = create( key );
+		File f = createFile( key );
 		if (!f.exists()) mkdir( f );
-		return new FilesystemTree( f );
+		return createTree( f );
 	}	
-		
+	
 	// I/O
 	public String serialize () {
 		Tree memory = new JSON();
@@ -263,8 +269,8 @@ public class FilesystemTree extends AbstractTree {
 		Tree fst0 = new FilesystemTree( args[1] );
 		fst0.deserialize( json );
 
-		//Tree fst1 = new FilesystemTree( args[1] );
-		//System.out.println( fst1.serialize() );
+		Tree fst1 = new FilesystemTree( args[1] );
+		System.out.println( fst1.serialize() );
 	}
 	
 

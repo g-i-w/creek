@@ -202,17 +202,21 @@ public abstract class AbstractTree implements Tree {
 		return allRoutes;
 	}
 	
-	public void routes ( Set<Set<Tree>> routes, Set<Tree> previousBranches ) {
+	public boolean routes ( Set<Set<Tree>> routes, Set<Tree> previousBranches ) {
 		Set<Tree> futureBranches = new LinkedHashSet<Tree>( previousBranches );
 		futureBranches.add( this );
 		boolean isLeaf = true;  // may be disproved
+		boolean noLoops = true;
 		for (Tree branch : branches()) {
-			if (! futureBranches.contains(branch)) {
+			if (futureBranches.contains(branch)) {
+				noLoops = false;
+			} else {
 				isLeaf = false; // further branches exist and we haven't seen them before
-				branch.routes( routes, futureBranches );
+				if (! branch.routes( routes, futureBranches ) ) noLoops = false;
 			}
 		}
-		if (isLeaf) routes.add( futureBranches );
+		if (isLeaf && routes!=null) routes.add( futureBranches );
+		return noLoops;
 	}
 	
 	public List<List<String>> paths () {
