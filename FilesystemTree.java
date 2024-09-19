@@ -5,8 +5,6 @@ import java.io.*;
 
 public class FilesystemTree extends AbstractTree {
 	
-	private static final String valueKeyword = "value";
-
 	private File file;    // file not null if directory
 	
 	Map<String,Tree> empty = new HashMap<>(); // null map
@@ -96,21 +94,6 @@ public class FilesystemTree extends AbstractTree {
 		write( valueFile(), value );
 	}
 	
-	public void sort ( File[] files ) {
-		Arrays.sort(
-			files,
-			new Comparator<File>() {
-				public int compare(File f1, File f2) {
-					try {
-						return Integer.valueOf(f1.getName()).compareTo(Integer.valueOf(f2.getName()));
-					} catch (Exception e) {
-						return f1.getName().compareTo(f2.getName());
-					}
-				}
-			}
-		);
-	}
-	
 	public File file () {
 		return file;
 	}
@@ -125,28 +108,28 @@ public class FilesystemTree extends AbstractTree {
 		return this; // to satisfy return type
 	}
 	
-	public File createFile ( String key ) {
+	public File fileFromKey ( String key ) {
 		return new File( file, key );
 	}
 
+	public String keyFromFile( File f ) {
+		return f.getName();
+	}
+	
 	public File valueFile () {
-		return createFile( valueKeyword );
+		return fileFromKey( "value" );
 	}
 	
 	public Tree createTree ( File f ) {
 		return new FilesystemTree( f );
 	}
-
+	
 	@Override
 	public Map<String,Tree> map () {
 		if (dir()) {
 			Map<String,Tree> map = new LinkedHashMap<>();
-			File[] files = file.listFiles();
-			sort( files );
-			for (File f : files) {
-				String key = f.getName();
-				if (key.charAt(0)=='.') continue; // skip hidden, this, & parent dirs
-				if (key.equals( valueKeyword )) continue; // skip value file
+			for (File f : FileActions.dir(file)) {
+				String key = keyFromFile( f );
 				Tree branch = createTree( f );
 				map.put( key, branch );
 			}
@@ -216,14 +199,14 @@ public class FilesystemTree extends AbstractTree {
 	@Override
 	public Tree add ( String key, String value ) {
 		toDirectory();
-		write( createFile( key ), value );
+		write( fileFromKey( key ), value );
 		return this;
 	}
 	
 	@Override
 	public Tree add ( String key, Tree treeBranch ) {
 		toDirectory();
-		File fileBranch = createFile( key );
+		File fileBranch = fileFromKey( key );
 		if (treeBranch==null || treeBranch.size()==0) { // no map keys, so check for value
 			if (treeBranch.value() != null) write( fileBranch, treeBranch.value() );
 			else mkdir( fileBranch );
@@ -236,14 +219,14 @@ public class FilesystemTree extends AbstractTree {
 
 	@Override
 	public Tree get ( String key ) {
-		File f = createFile( key );
+		File f = fileFromKey( key );
 		if (f.exists()) return createTree( f );
 		else return null;
 	}
 	
 	@Override
 	public Tree auto ( String key ) {
-		File f = createFile( key );
+		File f = fileFromKey( key );
 		if (!f.exists()) mkdir( f );
 		return createTree( f );
 	}	

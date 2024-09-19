@@ -35,17 +35,54 @@ public class FileActions {
 		for (String level : path) fullPath.append( File.separator ).append( level );
 		return exists( fullPath.toString() );
 	}
+	
+	public static Comparator<File> fileComparator () {
+		return new Comparator<File>() {
+			public int compare(File f1, File f2) {
+				if ( f1.getParentFile().equals( f2.getParentFile() ) ) {
+					try {
+						return Integer.valueOf(f1.getName()).compareTo(Integer.valueOf(f2.getName()));
+					} catch (Exception e) {
+						return f1.getName().compareTo(f2.getName());
+					}
+				} else {
+					return f1.compareTo(f2);
+				}
+			}
+		};
+	}
+	
+	public static List<File> sortFiles ( List<File> files ) {
+		return sortFiles( files.toArray(new File[0]) );
+	}
 
+	public static List<File> sortFiles ( File[] files ) {
+		Arrays.sort( files, fileComparator() );
+		return Arrays.asList( files );
+	}
+
+	public static List<File> dir ( File dir ) {
+		if (dir == null || !dir.exists() || !dir.isDirectory()) return new ArrayList<File>(0);
+		File[] files = dir.listFiles();
+		sortFiles( files );
+		List<File> dirList = new ArrayList<>(files.length);
+		for (File f : files) {
+			if (f.getName().charAt(0)=='.') continue; // skip hidden files, this, & parent dirs
+			dirList.add( f );
+		}
+		return dirList;
+	}
+	
 	public static List<File> recurse ( String path ) {
-		return recurse( new File(path) );
+		return sortFiles( recurse( new File(path) ) );
 	}
 
 	public static List<File> recurse ( File file ) {
-		return recurse( file, new ArrayList<File>() );
+		return sortFiles( recurse( file, new ArrayList<File>() ) );
 	}
 
 	public static List<File> recurse ( File file, List<File> list ) {
-		if (file == null || !file.exists()) return new ArrayList<File>();
+		if (file == null || !file.exists()) return new ArrayList<File>(0);
 		if (file.getName().charAt(0)!='.') {
 			if (file.isDirectory()) {
 				for (File f : file.listFiles()) recurse( f, list );
@@ -53,7 +90,7 @@ public class FileActions {
 				list.add( file );
 			}
 		}
-		Collections.sort(list);
+		//Collections.sort(list);
 		return list;
 	}
 	

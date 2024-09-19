@@ -37,31 +37,21 @@ public class DataFileTree extends FilesystemTree {
 		return tree.routes( null, new HashSet<Tree>() ); // check for recursive loops, which JSON format cannot natively handle
 	}
 	
-	public String type () {
-		File typeFile = createFile("type");
-		if (typeFile.exists()) return read(typeFile);
-		else return null;
-	}
-	
-	public void type ( String type ) {
-		write( createFile("type"), type );
-	}
-	
-	public Map<String,Tree> mapJSON () {
+	public Tree JSON ( String value ) {
 		try {
-			return new JSON().deserialize( value() ).map();
+			return new JSON().deserialize( value );
 		} catch (Exception e) {
 			e.printStackTrace();
-			return super.map();
+			return null;
 		}
 	}
 	
-	public Map<String,Tree> mapCSV () {
+	public Tree CSV ( String value ) {
 		try {
-			return new JSON().data( new CSV().append( value() ).data() ).map();
+			return new JSON().data( new CSV().append( value ).data() );
 		} catch (Exception e) {
 			e.printStackTrace();
-			return super.map();		
+			return null;
 		}
 	}
 	
@@ -69,6 +59,75 @@ public class DataFileTree extends FilesystemTree {
 		return teir;
 	}
 	
+	public File typeFile () {
+		return fileFromKey( "type" );
+	}
+	
+	public String type () {
+		if (dir()) {
+			File typeFile = typeFile();
+			if (typeFile.exists()) return read(typeFile);
+			else return "";
+		} else {
+			return FileActions.extension( file() ).toUpperCase();
+		}
+	}
+	
+	public void type ( String type ) {
+		write( fileFromKey("type"), type );
+	}
+	
+	public void createTreeDir ( String key, Tree tree ) {
+		DataFileTree dft = new DataFileTree( fileFromKey( key ), teir+1, maxTeirs );
+		if (canBeCSV(tree)) {
+			// CSV
+			dft.toDirectory();
+			dft.value( new CSV().data( tree.paths() ).serial() );
+			dft.type( "CSV" );
+		} else if (canBeJSON(tree)) {
+			// JSON
+			dft.toDirectory();
+			dft.value( new JSON().map( tree.map() ).serialize() );
+			dft.type( "JSON" );
+		} else {
+			System.out.println( "value" );
+			dft.value( tree.value() );
+		}
+	}
+
+	public void createTreeFile ( String key, Tree tree ) {
+		if (canBeCSV(tree)) {
+			// CSV
+			write( fileFromKey( key+".csv" ), new CSV().data( tree.paths() ).serial() );
+		} else if (canBeJSON(tree)) {
+			// JSON
+			write( fileFromKey( key+".json" ), new JSON().map( tree.map() ).serialize() );
+		} else {
+			write( fileFromKey( key ), tree.value() );
+		}
+	}
+	
+	public boolean virtual () {
+		return (teir > maxTeirs);
+	}
+	
+	public Map<String,Tree> virtualMap () {
+		if (dir()) {
+			Map<String,Tree> map = new LinkedHashMap<>();
+			for (File f : FileActions.dir(file())) {
+				String key = keyFromFile( f );
+				DataFileTree branch = new DataFileTree( f, teir+1, maxTeirs );
+				String type = branch.type();
+				String value = branch.value();
+				if (type.equals("JSON")) map.put( key, JSON( value ) );
+				else if (type.equals("CSV")) map.put( key, CSV( value ) );
+				else map.put( key, branch );
+			}
+			return map;
+		}
+		else return empty;
+	}
+
 	@Override
 	public Tree createTree ( File f ) {
 		//System.out.println( "teir: "+teir+", max: "+maxTeirs );
@@ -76,44 +135,52 @@ public class DataFileTree extends FilesystemTree {
 	}
 	
 	@Override
+	public File fileFromKey ( String key ) {
+		File testFile = super.fileFromKey( key );
+		if (!testFile.exists()) { // if it doesn't exist, check for file names with extensions
+			for (File extendedFile : FileActions.dir( file() )) {
+				if (FileActions.minName( extendedFile ).equals( key )) return extendedFile; // file with an extension
+			}
+		}
+		return testFile;
+	}
+	
+	@Override
 	public Tree map ( Map<String,Tree> map ) {
-		if (teir > maxTeirs && map != null) {
-			System.out.println( "add( Map<String,String> )" );
+		if (map==null) return this;
+		if (virtual()) {
 			clear();
 			toDirectory();
 			for (String key : map.keySet()) {
 				Tree tree = map.get(key);
-				DataFileTree dft = new DataFileTree( createFile( key ), teir+1, maxTeirs );
-				if (canBeCSV(tree)) {
-					// CSV
-					dft.toDirectory();
-					dft.value( new CSV().data( tree.paths() ).serial() );
-					dft.type( "CSV" );
-				} else if (canBeJSON(tree)) {
-					// JSON
-					dft.toDirectory();
-					dft.value( new JSON().map( tree.map() ).serialize() );
-					dft.type( "JSON" );
-				} else {
-					System.out.println( "value" );
-					dft.value( tree.value() );
-				}
+				createTreeFile( key, tree );
 			}
 		} else {
-			System.out.println( "map( Map<String,Tree> )" );
 			super.map( map );
 		}
 		return this;
 	}
 	
 	@Override
-	public Map<String,Tree> map () {
-		String type = type();
-		System.out.println( type );
-		if (type != null && type.equals("JSON")) return mapJSON();
-		if (type != null && type.equals("CSV")) return mapCSV();
-		return super.map();
+	public String keyFromFile( File f ) {
+		return FileActions.minName( f );
 	}
+	
+	@Override
+	public Map<String,Tree> map () {
+		if (virtual()) {
+			return virtualMap();
+		} else {
+			return super.map();
+		}
+	}
+	
+	@Override
+	public Tree get ( String key ) {
+		System.out.println( "teir:"+teir+" virt:"+virtual()+" map:"+map().keySet() );
+		return map().get(key);
+	}
+	
 	
 	
 	public static void main ( String[] args ) throws Exception {
@@ -124,6 +191,7 @@ public class DataFileTree extends FilesystemTree {
 		d0.deserialize( json );
 
 		Tree d1 = new DataFileTree( new File(args[1]), 1 );
+		d1.auto( "test2" ).auto( "hello" ).auto( "1" ).auto( "2" ).auto( "3" ).add( "a", "A" );
 		System.out.println( d1.serialize() );
 	}
 	
