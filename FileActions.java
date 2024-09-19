@@ -41,7 +41,7 @@ public class FileActions {
 			public int compare(File f1, File f2) {
 				if ( f1.getParentFile().equals( f2.getParentFile() ) ) {
 					try {
-						return Integer.valueOf(f1.getName()).compareTo(Integer.valueOf(f2.getName()));
+						return Integer.valueOf(minName(f1)).compareTo(Integer.valueOf(minName(f2)));
 					} catch (Exception e) {
 						return f1.getName().compareTo(f2.getName());
 					}

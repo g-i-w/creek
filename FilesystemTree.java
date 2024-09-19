@@ -49,10 +49,10 @@ public class FilesystemTree extends AbstractTree {
 		if (ff == null) return;
 		if(ff.exists() && ff.isDirectory()) return; // already a directory
 		try {
-			file.delete();
-			file.mkdir();
+			ff.delete();
+			ff.mkdir();
 		} catch (Exception e) {
-			System.err.println( "Error while creating directory '"+file.getAbsolutePath()+"'" );
+			System.err.println( "Error while creating directory '"+ff.getAbsolutePath()+"'" );
 			e.printStackTrace();
 		}
 	}
@@ -87,11 +87,10 @@ public class FilesystemTree extends AbstractTree {
 	}
 	
 	public void toDirectory () {
-		//System.out.println( "toDirectory: "+file.getAbsolutePath() );
 		if (dir()) return;
 		String value = value();
 		mkdir();
-		write( valueFile(), value );
+		if (!value.equals("")) write( valueFile(), value );
 	}
 	
 	public File file () {
@@ -145,7 +144,7 @@ public class FilesystemTree extends AbstractTree {
 		} else {
 			if (file.exists()) return read();
 		}
-		return null;
+		return "";
 	}
 
 	@Override
@@ -226,10 +225,11 @@ public class FilesystemTree extends AbstractTree {
 	
 	@Override
 	public Tree auto ( String key ) {
+		toDirectory();
 		File f = fileFromKey( key );
-		if (!f.exists()) mkdir( f );
+		mkdir( f );
 		return createTree( f );
-	}	
+	}
 	
 	// I/O
 	public String serialize () {
@@ -253,6 +253,7 @@ public class FilesystemTree extends AbstractTree {
 		fst0.deserialize( json );
 
 		Tree fst1 = new FilesystemTree( args[1] );
+		fst1.auto( "test2" ).auto( "hello" ).auto( "1" ).auto( "2" ).auto( "3" );
 		System.out.println( fst1.serialize() );
 	}
 	

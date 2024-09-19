@@ -420,6 +420,8 @@ public class JSON extends AbstractTree {
 				String value = subBranch.value();
 				if (value==null) {
 					json.append("null");
+				} else if (value.equals("")) {
+					json.append("\"\"");
 				} else if (value.equals("true") || value.equals("false") || !Regex.exists( value, "[^\\d]" )) {
 					json.append( value );
 				} else {
