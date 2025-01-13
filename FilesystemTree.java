@@ -66,6 +66,7 @@ public class FilesystemTree extends AbstractTree {
 		try {
 			FileActions.write( ff, data, "UTF-8", false );
 		} catch (Exception e) {
+			System.err.println( "Raw: "+data );
 			System.err.println( "Error while writing to '"+ff.getAbsolutePath()+"'" );
 			e.printStackTrace();
 		}
@@ -252,9 +253,9 @@ public class FilesystemTree extends AbstractTree {
 		Tree fst0 = new FilesystemTree( args[1] );
 		fst0.deserialize( json );
 
-		Tree fst1 = new FilesystemTree( args[1] );
-		fst1.auto( "test2" ).auto( "hello" ).auto( "1" ).auto( "2" ).auto( "3" );
-		System.out.println( fst1.serialize() );
+		//Tree fst1 = new FilesystemTree( args[1] );
+		//fst1.auto( "test2" ).auto( "hello" ).auto( "1" ).auto( "2" ).auto( "3" );
+		//System.out.println( fst1.serialize() );
 	}
 	
 

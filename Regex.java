@@ -2,6 +2,7 @@ package creek;
 
 import java.util.*;
 import java.util.regex.*;
+import java.util.function.Function;
 
 public class Regex {
 
@@ -183,14 +184,27 @@ public class Regex {
 		return replace( input, regex, framing, null, null );
 	}
 	
+	public static String replace ( String input, String regex, String subOld, String subNew ) throws Exception {
+		return replace( input, regex, null, subOld, subNew );
+	}
+	
 	public static String replace ( String input, String regex, List<String> framing, String subOld, String subNew ) throws Exception {
+		return replace( input, regex, framing, subOld, subNew, null ); 
+	}
+
+	public static String replace ( String input, String regex, List<String> framing, Function<String,String> transform ) throws Exception {
+		return replace( input, regex, framing, null, null, transform ); 
+	}
+
+	public static String replace ( String input, String regex, List<String> framing, String subOld, String subNew, Function<String,String> transform ) throws Exception {
 		Matcher matcher = matcher( input, regex );
 		StringBuilder output = new StringBuilder();
 		int lastIndex = 0;
 		while (matcher.find()) {
 			String compound = compound( matcher, framing );
 			//System.out.print( compound+" --> " );
-			if (subOld!=null & subNew!=null) compound = compound.replaceAll( subOld, subNew );
+			if (transform==null && subOld!=null & subNew!=null) compound = compound.replaceAll( subOld, subNew );
+			if (transform!=null) compound = transform.apply( compound );
 			//System.out.println( compound );
 			output
 				.append( input, lastIndex, matcher.start() )
@@ -198,6 +212,7 @@ public class Regex {
 			;
 			lastIndex = matcher.end();
 		}
+		output.append( input, lastIndex, input.length() );
 		return output.toString();
 	}
 	

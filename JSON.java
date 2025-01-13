@@ -406,14 +406,14 @@ public class JSON extends AbstractTree {
 		for (int i=0; i<length; i++) sb.append( "\t" );
 	}
 	
-	private void serialize ( Tree branch, StringBuilder json, int i ) {
+	private void serialize ( Tree branch, StringBuilder json, boolean readable, int i ) {
 		boolean isArray = (branch.integerKeys() && printArrays);
 		if (isArray) json.append("[");
 		else json.append("{");
 		String comma = "";
 		for (Map.Entry<String,Tree> entry : branch.map().entrySet()) {
-			json.append(comma).append("\n");
-			indent( json, i+1 );
+			if (readable) json.append(comma).append("\n");
+			if (readable) indent( json, i+1 );
 			if (! isArray) json.append("\"").append( entry.getKey() ).append("\": ");
 			Tree subBranch = entry.getValue();
 			if (subBranch.size()==0) {
@@ -430,20 +430,24 @@ public class JSON extends AbstractTree {
 					).append("\"");
 				}
 			} else {
-				serialize( subBranch, json, i+1 );
+				serialize( subBranch, json, readable, i+1 );
 			}
 			comma = ",";
 		}
-		json.append("\n");
-		indent( json, i );
+		if (readable) json.append("\n");
+		if (readable) indent( json, i );
 		if (isArray) json.append("]");
 		else json.append("}");
 	}
 	
-	public String serialize () {
+	public String serialize ( boolean readable ) {
 		StringBuilder json = new StringBuilder();
-		serialize( this, json, 0 );
+		serialize( this, json, readable, 0 );
 		return json.toString();
+	}
+
+	public String serialize () {
+		return serialize( true );
 	}
 	
 }

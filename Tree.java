@@ -45,6 +45,7 @@ public interface Tree {
 	
 	// I/O
 	public String serialize ();
+	public String serialize ( boolean readableText );
 	public Tree deserialize ( String serial ) throws Exception;
 	
 	// Flattening

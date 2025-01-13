@@ -49,7 +49,7 @@ public abstract class AbstractTree implements Tree {
 	
 	// Array style entry
 	public Tree add ( String value ) {
-		value = value.intern();
+		if (value!=null) value = value.intern();
 		Tree branch = create();
 		branch.value( value );
 		add( branch );
@@ -192,6 +192,10 @@ public abstract class AbstractTree implements Tree {
 	}
 
 	public String serialize () {
+		return serialize( true );
+	}
+	
+	public String serialize ( boolean readable ) {
 		return toString();
 	}
 	
@@ -282,7 +286,7 @@ class TestAbstractTree extends AbstractTree {
 		tree.auto( path0 ).add( "0", "this is something" ).add( "1", "true" ).add( "2", "1.001" ).add( "3", "2" );
 		tree.auto( "level0" ).add( "a" ).add( "2.002" ).auto( path1 );
 
-		System.out.println( "toString:\n"+tree );
+		System.out.println( "toString():\n"+tree );
 		
 		System.out.println( "\nroutes (values):" );
 		for (Set<Tree> route : tree.routes()) {
