@@ -35,14 +35,14 @@ public class Stats {
 	private long markMemory;
 	
 	private String name;
-	private int nukiBer;
+	private int objectId;
 	
 	public Stats ( String name ) {
 		initialTime = time();
 		initialMemory = usedMemory();
 		mark = initialTime;
 		markMemory = initialMemory;
-		nukiBer = serial.getAndIncrement();
+		objectId = serial.getAndIncrement();
 		this.name = name;
 	}
 	
@@ -50,11 +50,15 @@ public class Stats {
 		this( null );
 	}
 	
-	public String deltaTime () {
+	public long delta () {
 		long now = time();
 		long delta = now - mark;
 		mark = now;
-		return ms( delta );
+		return delta;
+	}
+	
+	public String deltaTime () {
+		return ms( delta() );
 	}
 	
 	public String totalTime () {
@@ -86,7 +90,7 @@ public class Stats {
 	}
 	
 	public String toString () {
-		return this.getClass().getName()+"-"+nukiBer+( name!=null ? " '"+name+"' | " : " | " )+totalTime()+", delta:"+deltaTime()+" | "+totalMemory()+", delta:"+deltaMemory();
+		return this.getClass().getName()+"-"+objectId+( name!=null ? " '"+name+"' | " : " | " )+totalTime()+", delta:"+deltaTime()+" | "+totalMemory()+", delta:"+deltaMemory();
 	}
 
 }

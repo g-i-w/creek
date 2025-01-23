@@ -3,7 +3,7 @@ package creek;
 import java.util.*;
 import java.io.*;
 
-public class FilesystemTree extends AbstractTree {
+public class FilesystemTree extends AbstractTree implements FileTree {
 	
 	private File file;    // file not null if directory
 	
