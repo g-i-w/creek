@@ -24,10 +24,14 @@ public class HeaderTable extends BasicTable {
 		
 		Set<String> header = header();
 		header.addAll( otherHeader );
-		if (data().size()>0) data().set( 0, new ArrayList<String>( header ) );
-		else data().add( new ArrayList<String>( header ) );
+		List<String> newHeader = new ArrayList<String>( header );
+		if (data().size()>0) {
+			data().set( 0, newHeader );
+		} else {
+			data().add( newHeader );
+		}
 		
-		for (int i=headerRow; i<lastRow; i++) {
+		for (int i=headerRow+1; i<lastRow; i++) {
 			List<String> toRow = new ArrayList<>();
 			Map<String,String> fromRow = otherTable.rowLookup( headerRow, i );
 			for (String colHeader : header) {
