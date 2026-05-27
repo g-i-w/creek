@@ -24,7 +24,8 @@ public class HeaderTable extends BasicTable {
 		
 		Set<String> header = header();
 		header.addAll( otherHeader );
-		data().set( 0, new ArrayList<String>( header ) );
+		if (data().size()>0) data().set( 0, new ArrayList<String>( header ) );
+		else data().add( new ArrayList<String>( header ) );
 		
 		for (int i=headerRow; i<lastRow; i++) {
 			List<String> toRow = new ArrayList<>();
