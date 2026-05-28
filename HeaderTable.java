@@ -79,7 +79,7 @@ public class HeaderTable extends BasicTable {
 		int otherVal = otherHeaderMap.get(otherValCol);
 		
 		// get the key->val map from the other table
-		Map<String,String> otherKeyVal = otherLookup.colLookup( otherKey, otherVal );
+		Map<String,String> otherMap = otherLookup.colLookup( otherKey, otherVal );
 		
 		// add a new column on the far right side
 		List<String> headerList = headerList();
@@ -88,17 +88,18 @@ public class HeaderTable extends BasicTable {
 		
 		// loop through rows of this table and use the other table key->val to assign a val
 		for (int i=1; i<rowCount(); i++) {
-			String key = data().get(i).get(thisKey);
-			String val = otherKeyVal.get(key);
 			List<String> row = data().get(i);
 			
 			// workaround for a bug where evidently compiler optimization meant I couldn't edit an item in data().get(i) on the fly...
 			List<String> newRow = new ArrayList<String>();
-			newRow.addAll( row );
-			
+			newRow.addAll( row );			
 			// pad end of line with nulls
 			for (int n=newRow.size(); n<=thisVal; n++) newRow.add( null );
 			
+			// get the key from this table (newRow) and val from other table (otherMap)
+			String key = newRow.get(thisKey);
+			String val = otherMap.get(key);
+
 			// replace the last null with val (or null)
 			newRow.set( thisVal, val );
 			
